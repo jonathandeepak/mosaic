@@ -76,6 +76,31 @@ export default async function EventPage({ params }) {
               <dd>{lt(event.location, locale, event.default_locale)}</dd>
             </div>
           )}
+          {(event.contact?.name || event.contact?.email || event.contact?.phone || event.contact?.website) && (
+            <div>
+              <dt>{t('contact')}</dt>
+              <dd>
+                {event.contact.name && <div>{event.contact.name}</div>}
+                {event.contact.email && (
+                  <div>
+                    <a href={`mailto:${event.contact.email}`}>{event.contact.email}</a>
+                  </div>
+                )}
+                {event.contact.phone && (
+                  <div>
+                    <a href={`tel:${event.contact.phone}`}>{event.contact.phone}</a>
+                  </div>
+                )}
+                {event.contact.website && (
+                  <div>
+                    <a href={event.contact.website} target="_blank" rel="noreferrer">
+                      {event.contact.website}
+                    </a>
+                  </div>
+                )}
+              </dd>
+            </div>
+          )}
         </dl>
 
         {lt(event.description, locale, event.default_locale) && (

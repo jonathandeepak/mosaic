@@ -33,6 +33,20 @@
   border-radius: var(--r-md);
 }
 
+.sectionHelp {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  margin-bottom: var(--s-4);
+}
+
+.presetList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+  max-height: 50dvh;
+  overflow-y: auto;
+}
+
 .footer {
   display: flex;
   align-items: center;

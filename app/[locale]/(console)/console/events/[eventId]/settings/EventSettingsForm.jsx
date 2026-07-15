@@ -5,8 +5,11 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from '@/lib/i18n/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { LOCALES, LOCALE_NAMES } from '@/lib/i18n/locales'
+import { toLocalInput, fromLocalInput } from '@/lib/dates'
+import { PARTICIPANT_TYPE_PRESETS, uniqueTypeKey } from '@/lib/participant-type-presets'
 import {
   Button,
+  Dialog,
   Field,
   Input,
   Textarea,
@@ -17,33 +20,6 @@ import {
   TabsContent,
 } from '@/components/ui'
 import styles from './settings.module.css'
-
-function toLocalInput(iso, timeZone) {
-  if (!iso) return ''
-  // Render the stored UTC instant as the event-timezone wall clock.
-  const d = new Date(iso)
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(d)
-  const get = (t) => parts.find((p) => p.type === t)?.value
-  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`
-}
-
-function fromLocalInput(value, timeZone) {
-  if (!value) return null
-  // Interpret the wall-clock value in the event timezone → UTC instant.
-  const [date, time] = value.split('T')
-  const [y, m, d] = date.split('-').map(Number)
-  const [hh, mm] = time.split(':').map(Number)
-  const guess = new Date(Date.UTC(y, m - 1, d, hh, mm))
-  // Adjust for the timezone's offset at that moment (two-pass, DST-safe enough)
-  const tzDate = new Date(guess.toLocaleString('en-US', { timeZone }))
-  const utcDate = new Date(guess.toLocaleString('en-US', { timeZone: 'UTC' }))
-  const offset = utcDate.getTime() - tzDate.getTime()
-  return new Date(guess.getTime() + offset).toISOString()
-}
 
 export function EventSettingsForm({ event, initialTypes, forms }) {
   const t = useTranslations('console')
@@ -62,7 +38,9 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   const [regOpens, setRegOpens] = useState(toLocalInput(event.registration_opens_at, event.timezone))
   const [regCloses, setRegCloses] = useState(toLocalInput(event.registration_closes_at, event.timezone))
   const [capacity, setCapacity] = useState(event.capacity ?? '')
+  const [contact, setContact] = useState(event.contact ?? {})
   const [types, setTypes] = useState(initialTypes)
+  const [typePickerOpen, setTypePickerOpen] = useState(false)
   const [saveState, setSaveState] = useState('idle')
 
   const timezones = Intl.supportedValuesOf?.('timeZone') ?? ['UTC']
@@ -82,6 +60,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
         registration_opens_at: fromLocalInput(regOpens, timezone),
         registration_closes_at: fromLocalInput(regCloses, timezone),
         capacity: capacity === '' ? null : Number(capacity),
+        contact,
         supported_locales: LOCALES.filter((l) => (name[l] ?? '').trim() !== ''),
       })
       .eq('id', event.id)
@@ -94,20 +73,22 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
     if (!error) router.refresh()
   }
 
-  async function addType() {
-    const key = `type_${Date.now().toString(36)}`
+  async function addType(preset) {
+    const base = preset ?? { key: `type_${Date.now().toString(36)}`, name: { en: 'New type' } }
+    const key = uniqueTypeKey(base.key, types.map((pt) => pt.key))
     const { data, error } = await supabase
       .from('participant_types')
       .insert({
         event_id: event.id,
         key,
-        name: { en: 'New type' },
+        name: base.name,
         form_id: forms[0]?.id ?? null,
         sort_order: types.length,
       })
       .select('*')
       .single()
     if (!error && data) setTypes((prev) => [...prev, data])
+    setTypePickerOpen(false)
   }
 
   async function updateType(id, patch) {
@@ -153,7 +134,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
                     />
                   )}
                 </Field>
-                <Field label={`${t('eventName')} — ${l} · location`}>
+                <Field label={`${t('location')} (${l})`}>
                   {({ id }) => (
                     <Input
                       id={id}
@@ -205,6 +186,53 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
           <Field label={t('capacity')} help={t('capacityHelp')}>
             {({ id }) => (
               <Input id={id} type="number" min="1" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            )}
+          </Field>
+        </div>
+      </section>
+
+      <section className="card card-pad">
+        <h2 style={{ marginBottom: 'var(--s-2)' }}>{t('contactInfo')}</h2>
+        <p className={styles.sectionHelp}>{t('contactHelp')}</p>
+        <div className={styles.grid2}>
+          <Field label={t('contactName')}>
+            {({ id }) => (
+              <Input
+                id={id}
+                value={contact.name ?? ''}
+                onChange={(e) => setContact({ ...contact, name: e.target.value })}
+              />
+            )}
+          </Field>
+          <Field label={t('contactEmail')}>
+            {({ id }) => (
+              <Input
+                id={id}
+                type="email"
+                value={contact.email ?? ''}
+                onChange={(e) => setContact({ ...contact, email: e.target.value })}
+              />
+            )}
+          </Field>
+          <Field label={t('contactPhone')}>
+            {({ id }) => (
+              <Input
+                id={id}
+                type="tel"
+                value={contact.phone ?? ''}
+                onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+              />
+            )}
+          </Field>
+          <Field label={t('contactWebsite')}>
+            {({ id }) => (
+              <Input
+                id={id}
+                type="url"
+                placeholder="https://example.com"
+                value={contact.website ?? ''}
+                onChange={(e) => setContact({ ...contact, website: e.target.value })}
+              />
             )}
           </Field>
         </div>
@@ -270,9 +298,33 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
             </div>
           ))}
         </div>
-        <Button variant="secondary" size="sm" onClick={addType} style={{ marginTop: 'var(--s-3)' }}>
-          {t('addType')}
-        </Button>
+        <Dialog
+          open={typePickerOpen}
+          onOpenChange={setTypePickerOpen}
+          title={t('selectType')}
+          trigger={
+            <Button variant="secondary" size="sm" style={{ marginTop: 'var(--s-3)' }}>
+              {t('addType')}
+            </Button>
+          }
+        >
+          <p className={styles.sectionHelp}>{t('selectTypeHelp')}</p>
+          <div className={styles.presetList}>
+            {PARTICIPANT_TYPE_PRESETS.map((preset) => (
+              <Button
+                key={preset.key}
+                variant="secondary"
+                size="sm"
+                onClick={() => addType(preset)}
+              >
+                {preset.name[locale] ?? preset.name.en}
+              </Button>
+            ))}
+          </div>
+          <Button onClick={() => addType(null)} style={{ marginTop: 'var(--s-4)', width: '100%' }}>
+            {t('customType')}
+          </Button>
+        </Dialog>
       </section>
 
       <div className={styles.footer}>

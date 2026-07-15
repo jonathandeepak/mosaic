@@ -48,7 +48,8 @@
     "registrationNotOpen": "Registration opens {date}",
     "when": "When",
     "where": "Where",
-    "signInToRegister": "Sign in to register"
+    "signInToRegister": "Sign in to register",
+    "contact": "Contact"
   },
   "wizard": {
     "title": "Register for {event}",
@@ -157,7 +158,23 @@
     "roleOrganizer": "Organizer",
     "roleViewer": "Viewer",
     "remove": "Remove",
-    "noParticipants": "No participants match the current filters."
+    "noParticipants": "No participants match the current filters.",
+    "newEventTitle": "Create a new event",
+    "create": "Create event",
+    "creating": "Creating…",
+    "createError": "Something went wrong creating the event. Please try again.",
+    "createNoAccess": "Your account does not have permission to create events. Ask an administrator to grant you organizer access.",
+    "createDateError": "The end date must be after the start date.",
+    "location": "Location",
+    "contactInfo": "Contact information",
+    "contactHelp": "Shown publicly on the event page.",
+    "contactName": "Contact name",
+    "contactEmail": "Email",
+    "contactPhone": "Phone",
+    "contactWebsite": "Website",
+    "selectType": "Select a participant type",
+    "selectTypeHelp": "Add a participant type from the list below, or create your own.",
+    "customType": "Create my own"
   },
   "questionTypes": {
     "text": "Short text",

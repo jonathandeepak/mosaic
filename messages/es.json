@@ -48,7 +48,8 @@
     "registrationNotOpen": "La inscripción abre el {date}",
     "when": "Cuándo",
     "where": "Dónde",
-    "signInToRegister": "Inicia sesión para inscribirte"
+    "signInToRegister": "Inicia sesión para inscribirte",
+    "contact": "Contacto"
   },
   "wizard": {
     "title": "Inscripción a {event}",
@@ -157,7 +158,23 @@
     "roleOrganizer": "Organizador",
     "roleViewer": "Observador",
     "remove": "Quitar",
-    "noParticipants": "Ningún participante coincide con los filtros actuales."
+    "noParticipants": "Ningún participante coincide con los filtros actuales.",
+    "newEventTitle": "Crear un nuevo evento",
+    "create": "Crear evento",
+    "creating": "Creando…",
+    "createError": "Ocurrió un error al crear el evento. Inténtalo de nuevo.",
+    "createNoAccess": "Tu cuenta no tiene permiso para crear eventos. Pide a un administrador que te dé acceso de organizador.",
+    "createDateError": "La fecha de fin debe ser posterior a la de inicio.",
+    "location": "Ubicación",
+    "contactInfo": "Información de contacto",
+    "contactHelp": "Se muestra públicamente en la página del evento.",
+    "contactName": "Nombre de contacto",
+    "contactEmail": "Correo electrónico",
+    "contactPhone": "Teléfono",
+    "contactWebsite": "Sitio web",
+    "selectType": "Seleccionar tipo de participante",
+    "selectTypeHelp": "Añade un tipo de participante de la lista o crea el tuyo propio.",
+    "customType": "Crear el mío propio"
   },
   "questionTypes": {
     "text": "Texto corto",

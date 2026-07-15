@@ -92,6 +92,25 @@
   flex-wrap: wrap;
 }
 
+.newEventForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin-top: var(--s-4);
+}
+
+.newEventDates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-4);
+}
+
+.newEventActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-3);
+}
+
 .statGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
