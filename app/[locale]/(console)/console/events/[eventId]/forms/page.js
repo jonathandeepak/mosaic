@@ -12,7 +12,9 @@ export default async function FormsPage({ params }) {
   const supabase = await getSupabaseServerClient()
   const { data: forms } = await supabase
     .from('forms')
-    .select('id, title, current_version_id, form_versions ( id, version, published_at )')
+    // forms↔form_versions has two FKs (form_id and current_version_id);
+    // the embed must name one or PostgREST rejects it as ambiguous (PGRST201).
+    .select('id, title, current_version_id, form_versions!form_versions_form_id_fkey ( id, version, published_at )')
     .eq('event_id', eventId)
 
   return (
