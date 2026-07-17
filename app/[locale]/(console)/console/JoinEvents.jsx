@@ -1,0 +1,98 @@
+'use client'
+
+import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { useRouter } from '@/lib/i18n/navigation'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import { lt } from '@/lib/i18n/locales'
+import { formatEventDateRange } from '@/lib/dates'
+import { Badge, Button } from '@/components/ui'
+
+/**
+ * Published events the user isn't part of: request access to join the
+ * team, or cancel a pending request. Approval happens on the event's Team
+ * page or in the admin console.
+ */
+export function JoinEvents({ events, requestedEventIds }) {
+  const t = useTranslations('console')
+  const locale = useLocale()
+  const router = useRouter()
+  const supabase = getSupabaseBrowserClient()
+  const [error, setError] = useState(null)
+  const [busyId, setBusyId] = useState(null)
+  const requested = new Set(requestedEventIds)
+
+  async function run(eventId, promise) {
+    setError(null)
+    setBusyId(eventId)
+    const { error } = await promise
+    setBusyId(null)
+    if (error) setError(error.message)
+    else router.refresh()
+  }
+
+  function request(eventId) {
+    run(eventId, supabase.rpc('request_event_access', { p_event_id: eventId }))
+  }
+
+  function cancel(eventId) {
+    run(
+      eventId,
+      supabase
+        .from('event_organizers')
+        .delete()
+        .eq('event_id', eventId)
+        .eq('status', 'requested')
+    )
+  }
+
+  return (
+    <section aria-label={t('joinEvents')} style={{ marginBlockStart: 'var(--s-8)' }}>
+      <h2>{t('joinEvents')}</h2>
+      <p style={{ color: 'var(--ink-soft)', marginBlock: 'var(--s-3)' }}>
+        {t('joinEventsHelp')}
+      </p>
+      {error && <p className="alert alert-error">{error}</p>}
+      <div className="table-wrap" style={{ maxInlineSize: '44rem' }}>
+        <table className="table">
+          <tbody>
+            {events.map((event) => (
+              <tr key={event.id}>
+                <td>
+                  <strong>{lt(event.name, locale, event.default_locale)}</strong>
+                  <div style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-xs)' }}>
+                    {formatEventDateRange(event.starts_at, event.ends_at, event.timezone, locale)}
+                  </div>
+                </td>
+                <td style={{ textAlign: 'end' }}>
+                  {requested.has(event.id) ? (
+                    <>
+                      <Badge tone="draft">{t('accessRequested')}</Badge>{' '}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={busyId === event.id}
+                        onClick={() => cancel(event.id)}
+                      >
+                        {t('cancelRequest')}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={busyId === event.id}
+                      onClick={() => request(event.id)}
+                    >
+                      {t('requestAccess')}
+                    </Button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
