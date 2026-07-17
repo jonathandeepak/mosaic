@@ -220,7 +220,7 @@
     "noRoleRequests": "No pending organizer access requests.",
     "searchUsers": "Search users",
     "roles": "Roles & privileges",
-    "rolesHelp": "What each role allows. Standard roles are fixed; custom roles can be renamed, edited, and deleted while unused.",
+    "rolesHelp": "What each role allows. Standard roles can have their privileges turned on or off but cannot be renamed or deleted; custom roles are fully editable while unused.",
     "standardRole": "Standard",
     "rolesGlobalGroup": "All events",
     "rolesEventGroup": "this event",

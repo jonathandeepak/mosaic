@@ -91,10 +91,10 @@ export function RoleMatrix({ roles, orgId, eventId = null }) {
           <tbody>
             {sortRoles(roles).map((role) => {
               const isPreset = !!role.preset_key
-              // global custom roles are editable only in the global (admin)
-              // matrix; event roles only in their own event's matrix
-              const editable =
-                !isPreset && (eventId ? role.event_id === eventId : role.event_id == null)
+              // roles are editable only in their own matrix: global roles
+              // (presets included) in the admin console, event roles on their
+              // event's team page
+              const editable = eventId ? role.event_id === eventId : role.event_id == null
               const dirty = !!edits[role.id] && Object.keys(edits[role.id] ?? {}).length > 0
               return (
                 <tr key={role.id}>
@@ -117,17 +117,15 @@ export function RoleMatrix({ roles, orgId, eventId = null }) {
                     </td>
                   ))}
                   <td style={{ textAlign: 'end', whiteSpace: 'nowrap' }}>
-                    {editable && (
-                      <>
-                        {dirty && (
-                          <Button size="sm" onClick={() => save(role)}>
-                            {t('saveRole')}
-                          </Button>
-                        )}{' '}
-                        <Button variant="ghost" size="sm" onClick={() => remove(role)}>
-                          {t('deleteRole')}
-                        </Button>
-                      </>
+                    {editable && dirty && (
+                      <Button size="sm" onClick={() => save(role)}>
+                        {t('saveRole')}
+                      </Button>
+                    )}{' '}
+                    {editable && !isPreset && (
+                      <Button variant="ghost" size="sm" onClick={() => remove(role)}>
+                        {t('deleteRole')}
+                      </Button>
                     )}
                   </td>
                 </tr>

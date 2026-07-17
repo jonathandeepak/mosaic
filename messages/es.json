@@ -220,7 +220,7 @@
     "noRoleRequests": "No hay solicitudes de acceso de organizador pendientes.",
     "searchUsers": "Buscar usuarios",
     "roles": "Roles y privilegios",
-    "rolesHelp": "Qué permite cada rol. Los roles estándar son fijos; los roles personalizados se pueden renombrar, editar y eliminar mientras no estén en uso.",
+    "rolesHelp": "Qué permite cada rol. En los roles estándar se pueden activar o desactivar privilegios, pero no se pueden renombrar ni eliminar; los roles personalizados son totalmente editables mientras no estén en uso.",
     "standardRole": "Estándar",
     "rolesGlobalGroup": "Todos los eventos",
     "rolesEventGroup": "este evento",

@@ -220,7 +220,7 @@
     "noRoleRequests": "Aucune demande d'accès organisateur en attente.",
     "searchUsers": "Rechercher des utilisateurs",
     "roles": "Rôles et privilèges",
-    "rolesHelp": "Ce que permet chaque rôle. Les rôles standard sont fixes ; les rôles personnalisés peuvent être renommés, modifiés et supprimés tant qu'ils ne sont pas utilisés.",
+    "rolesHelp": "Ce que permet chaque rôle. Les privilèges des rôles standard peuvent être activés ou désactivés, mais ces rôles ne peuvent être ni renommés ni supprimés ; les rôles personnalisés sont entièrement modifiables tant qu'ils ne sont pas utilisés.",
     "standardRole": "Standard",
     "rolesGlobalGroup": "Tous les événements",
     "rolesEventGroup": "cet événement",
