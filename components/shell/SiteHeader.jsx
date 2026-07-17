@@ -21,8 +21,9 @@ export async function SiteHeader() {
           <span>{t('common.appName')}</span>
         </Link>
         <nav className={styles.nav} aria-label="Main">
-          <Link href="/">{t('nav.events')}</Link>
+          <Link href="/">{t('nav.home')}</Link>
           {user && <Link href="/my/registrations">{t('nav.myRegistrations')}</Link>}
+          {user && <Link href="/my/profile">{t('nav.profile')}</Link>}
           {/* All signed-in users can open the console: those without access
               get the request-access panel instead of the event list. */}
           {user && <Link href="/console">{t('nav.console')}</Link>}

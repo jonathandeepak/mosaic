@@ -20,7 +20,9 @@
   "nav": {
     "events": "Events",
     "myRegistrations": "My registrations",
-    "console": "Organizer console"
+    "console": "Organizer console",
+    "home": "Home",
+    "profile": "Profile"
   },
   "auth": {
     "title": "Welcome to Mosaic",
@@ -230,5 +232,14 @@
     "phone": "Phone",
     "file": "File upload",
     "section": "Section header"
+  },
+  "profile": {
+    "title": "My profile",
+    "email": "Email",
+    "emailHelp": "Managed by your sign-in provider.",
+    "fullName": "Full name",
+    "language": "Preferred language",
+    "saved": "Saved",
+    "updateError": "Something went wrong. Please try again."
   }
 }

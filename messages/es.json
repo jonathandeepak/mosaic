@@ -20,7 +20,9 @@
   "nav": {
     "events": "Eventos",
     "myRegistrations": "Mis inscripciones",
-    "console": "Consola del organizador"
+    "console": "Consola del organizador",
+    "home": "Inicio",
+    "profile": "Perfil"
   },
   "auth": {
     "title": "Bienvenido a Mosaic",
@@ -230,5 +232,14 @@
     "phone": "Teléfono",
     "file": "Subir archivo",
     "section": "Encabezado de sección"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "email": "Correo electrónico",
+    "emailHelp": "Gestionado por tu proveedor de inicio de sesión.",
+    "fullName": "Nombre completo",
+    "language": "Idioma preferido",
+    "saved": "Guardado",
+    "updateError": "Algo salió mal. Inténtalo de nuevo."
   }
 }
