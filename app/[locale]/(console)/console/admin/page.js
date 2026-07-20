@@ -36,7 +36,6 @@ export default async function AdminPage({ params }) {
     { data: profiles },
     { data: roles },
     { data: requests },
-    { data: roleRequests },
     { data: eventRoles },
   ] = await Promise.all([
     supabase.from('organizations').select('id').order('created_at').limit(1).maybeSingle(),
@@ -49,10 +48,6 @@ export default async function AdminPage({ params }) {
       .from('event_organizers')
       .select('event_id, user_id, created_at, events:event_id ( name, default_locale )')
       .eq('status', 'requested')
-      .order('created_at', { ascending: true }),
-    supabase
-      .from('role_requests')
-      .select('user_id, message, created_at')
       .order('created_at', { ascending: true }),
     // presets + global custom roles for the matrix and approval dropdowns
     supabase.from('event_roles').select('*').is('event_id', null),
@@ -73,7 +68,6 @@ export default async function AdminPage({ params }) {
     <AdminConsole
       users={users}
       requests={(requests ?? []).map(withProfile)}
-      roleRequests={(roleRequests ?? []).map(withProfile)}
       eventRoles={eventRoles ?? []}
       orgId={org?.id ?? null}
       currentUserId={user.id}

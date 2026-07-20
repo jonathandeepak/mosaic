@@ -6,7 +6,6 @@ import { formatEventDateRange } from '@/lib/dates'
 import { Badge } from '@/components/ui'
 import { NewEventButton } from './NewEventButton'
 import { JoinEvents } from './JoinEvents'
-import { RequestOrganizerRole } from './RequestOrganizerRole'
 import styles from './console.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -25,10 +24,9 @@ export default async function ConsoleHome({ params }) {
     return null
   }
 
-  const [{ data: myRoles }, { data: memberships }, { data: roleRequest }] = await Promise.all([
+  const [{ data: myRoles }, { data: memberships }] = await Promise.all([
     supabase.from('user_roles').select('role').eq('user_id', user.id),
     supabase.from('event_organizers').select('event_id, status').eq('user_id', user.id),
-    supabase.from('role_requests').select('user_id').eq('user_id', user.id).maybeSingle(),
   ])
   // Admins and global organizers see and manage every event.
   const seesAllEvents = (myRoles?.length ?? 0) > 0
@@ -120,10 +118,6 @@ export default async function ConsoleHome({ params }) {
         requestedEventIds={requestedIds}
         allAccess={seesAllEvents}
       />
-
-      {!seesAllEvents && (
-        <RequestOrganizerRole userId={user.id} roleRequested={Boolean(roleRequest)} />
-      )}
     </>
   )
 }
