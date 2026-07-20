@@ -283,7 +283,11 @@
     "statIcon": "Icon",
     "iconNone": "No icon",
     "uploadIcon": "Upload icon",
-    "highlightStat": "Highlight This Stat"
+    "highlightStat": "Highlight This Stat",
+    "descriptionColor": "Description Color",
+    "chipOpacity": "Chip Opacity",
+    "applyToAllTitles": "Apply This Color To All Section Titles",
+    "sectionBackground": "Section Background Color"
   },
   "questionTypes": {
     "text": "Short text",

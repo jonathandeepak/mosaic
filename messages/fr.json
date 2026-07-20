@@ -283,7 +283,11 @@
     "statIcon": "Icône",
     "iconNone": "Aucune icône",
     "uploadIcon": "Téléverser une icône",
-    "highlightStat": "Mettre ce chiffre en avant"
+    "highlightStat": "Mettre ce chiffre en avant",
+    "descriptionColor": "Couleur de la description",
+    "chipOpacity": "Opacité de l'étiquette",
+    "applyToAllTitles": "Appliquer cette couleur à tous les titres de section",
+    "sectionBackground": "Couleur de fond de la section"
   },
   "questionTypes": {
     "text": "Texte court",

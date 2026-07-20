@@ -283,7 +283,11 @@
     "statIcon": "Icono",
     "iconNone": "Sin icono",
     "uploadIcon": "Subir icono",
-    "highlightStat": "Destacar esta cifra"
+    "highlightStat": "Destacar esta cifra",
+    "descriptionColor": "Color de la descripción",
+    "chipOpacity": "Opacidad de la etiqueta",
+    "applyToAllTitles": "Aplicar este color a todos los títulos de sección",
+    "sectionBackground": "Color de fondo de la sección"
   },
   "questionTypes": {
     "text": "Texto corto",

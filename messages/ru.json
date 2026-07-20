@@ -283,7 +283,11 @@
     "statIcon": "Значок",
     "iconNone": "Без значка",
     "uploadIcon": "Загрузить значок",
-    "highlightStat": "Выделить эту цифру"
+    "highlightStat": "Выделить эту цифру",
+    "descriptionColor": "Цвет описания",
+    "chipOpacity": "Прозрачность плашки",
+    "applyToAllTitles": "Применить этот цвет ко всем заголовкам разделов",
+    "sectionBackground": "Цвет фона раздела"
   },
   "questionTypes": {
     "text": "Короткий текст",

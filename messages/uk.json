@@ -283,7 +283,11 @@
     "statIcon": "Значок",
     "iconNone": "Без значка",
     "uploadIcon": "Завантажити значок",
-    "highlightStat": "Виділити цю цифру"
+    "highlightStat": "Виділити цю цифру",
+    "descriptionColor": "Колір опису",
+    "chipOpacity": "Прозорість плашки",
+    "applyToAllTitles": "Застосувати цей колір до всіх заголовків розділів",
+    "sectionBackground": "Колір тла розділу"
   },
   "questionTypes": {
     "text": "Короткий текст",

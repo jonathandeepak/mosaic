@@ -408,6 +408,35 @@ export function EventPageEditor({ initialEvent }) {
     />
   )
 
+  // Per-section background color control (About / Speakers / Agenda / Tickets / Contact).
+  const HEADING_SECTIONS = ['about', 'speakers', 'agenda', 'tickets']
+
+  const sectionBgField = (section) => (
+    <ColorField
+      label={t('sectionBackground')}
+      addLabel={t('addColor')}
+      resetLabel={t('resetColor')}
+      value={content[section]?.bg}
+      defaultValue={isDark ? '#111111' : '#ffffff'}
+      onChange={(c) => patchContent(section, { bg: c ?? undefined })}
+    />
+  )
+
+  // Set every section heading to one color in a single update.
+  function applyColorToAllHeadings(color) {
+    if (!color) return
+    setEvent((prev) => {
+      const pc = prev.page_content ?? {}
+      const next = { ...pc }
+      for (const sec of HEADING_SECTIONS) {
+        const s = pc[sec] ?? {}
+        next[sec] = { ...s, heading_style: { ...(s.heading_style ?? {}), color } }
+      }
+      return { ...prev, page_content: next }
+    })
+    markDirty()
+  }
+
   function renderTheme() {
     const theme = content.theme ?? {}
     const setTheme = (patch) => patchContent('theme', patch)
@@ -467,6 +496,14 @@ export function EventPageEditor({ initialEvent }) {
           defaultValue={isDark ? '#ffffff' : '#000000'}
           onChange={(c) => setTheme({ title_color: c ?? undefined })}
         />
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!theme.title_color}
+          onClick={() => applyColorToAllHeadings(theme.title_color)}
+        >
+          {t('applyToAllTitles')}
+        </Button>
         <StyleSelects
           t={t}
           style={{ size: theme.title_size, font: theme.title_font }}
@@ -528,6 +565,14 @@ export function EventPageEditor({ initialEvent }) {
             />
           )}
         </Field>
+        <ColorField
+          label={t('descriptionColor')}
+          addLabel={t('addColor')}
+          resetLabel={t('resetColor')}
+          value={content.theme?.desc_color}
+          defaultValue={isDark ? '#ffffff' : '#ffffff'}
+          onChange={(c) => patchContent('theme', { desc_color: c ?? undefined })}
+        />
         <Field label={`${t('location')} (${previewLocale})`}>
           {({ id }) => (
             <Input
@@ -592,6 +637,21 @@ export function EventPageEditor({ initialEvent }) {
             />
           </div>
         )}
+        {hero.show_chip !== false && hero.chip_bg && (
+          <div className={styles.colorField}>
+            <span className="field-label">
+              {t('chipOpacity')}: {hero.chip_bg_opacity ?? 100}%
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={hero.chip_bg_opacity ?? 100}
+              onChange={(e) => patchContent('hero', { chip_bg_opacity: Number(e.target.value) })}
+            />
+          </div>
+        )}
       </>
     )
   }
@@ -602,6 +662,7 @@ export function EventPageEditor({ initialEvent }) {
       <>
         {sectionHeader('about')}
         {headingEditor('about')}
+        {sectionBgField('about')}
         <Field label={`${t('body')} (${previewLocale})`}>
           {({ id }) => (
             <Textarea
@@ -755,6 +816,7 @@ export function EventPageEditor({ initialEvent }) {
       <>
         {sectionHeader('speakers')}
         {headingEditor('speakers')}
+        {sectionBgField('speakers')}
         <ColorField
           label={t('roleColor')}
           addLabel={t('addColor')}
@@ -838,6 +900,7 @@ export function EventPageEditor({ initialEvent }) {
       <>
         {sectionHeader('agenda')}
         {headingEditor('agenda')}
+        {sectionBgField('agenda')}
         <CheckboxRow
           label={t('showHeroAgendaBtn')}
           checked={agenda.show_hero_button !== false}
@@ -903,6 +966,7 @@ export function EventPageEditor({ initialEvent }) {
       <>
         {sectionHeader('tickets')}
         {headingEditor('tickets')}
+        {sectionBgField('tickets')}
         <ColorField
           label={t('highlightColor')}
           addLabel={t('addColor')}
@@ -967,6 +1031,7 @@ export function EventPageEditor({ initialEvent }) {
     const set = (key, value) => patchEvent({ contact: { ...contact, [key]: value } })
     return (
       <>
+        {sectionBgField('contact')}
         <Field label={t('contactName')}>
           {({ id }) => <Input id={id} value={contact.name ?? ''} onChange={(e) => set('name', e.target.value)} />}
         </Field>

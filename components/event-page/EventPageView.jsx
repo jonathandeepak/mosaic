@@ -146,6 +146,9 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
   const speakers = content.speakers ?? {}
   const agenda = content.agenda ?? {}
   const tickets = content.tickets ?? {}
+  const contactSection = content.contact ?? {}
+  const chipBg = hexToRgba(hero.chip_bg, hero.chip_bg_opacity)
+  const sectionBg = (s) => (s?.bg ? { background: s.bg } : undefined)
   const showAbout = about.enabled && (L(about.body) || about.image_path || about.stats?.length)
   const showSpeakers = speakers.enabled && speakers.items?.length > 0
   const showAgenda = agenda.enabled && (agenda.items?.length > 0 || agenda.image_path)
@@ -242,7 +245,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
             <span
               className={styles.heroChip}
               style={{
-                ...(hero.chip_bg ? { background: hero.chip_bg, borderColor: hero.chip_bg } : {}),
+                ...(chipBg ? { background: chipBg, borderColor: chipBg } : {}),
                 ...(hero.chip_text ? { color: hero.chip_text } : {}),
               }}
             >
@@ -253,7 +256,14 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
           <h1 className={styles.heroTitle} style={titleStyle}>
             {name}
           </h1>
-          {description && <p className={styles.heroDescription}>{description}</p>}
+          {description && (
+            <p
+              className={styles.heroDescription}
+              style={theme.desc_color ? { color: theme.desc_color } : undefined}
+            >
+              {description}
+            </p>
+          )}
           <div className={styles.heroActions}>
             {closed ? (
               <p className={styles.heroNotice}>{t('registrationClosed')}</p>
@@ -277,7 +287,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- About ---- */}
       {showAbout && (
-        <Section section="about" className={styles.about} {...sectionProps}>
+        <Section section="about" className={styles.about} style={sectionBg(about)} {...sectionProps}>
           <div className={`container ${styles.aboutGrid}`}>
             <div className={styles.aboutText}>
               {heading(about, t('aboutDefault'))}
@@ -322,7 +332,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Speakers ---- */}
       {showSpeakers && (
-        <Section section="speakers" className={styles.speakers} {...sectionProps}>
+        <Section section="speakers" className={styles.speakers} style={sectionBg(speakers)} {...sectionProps}>
           <div className="container">
             {heading(speakers, t('speakersDefault'))}
             <div className={styles.speakerGrid}>
@@ -357,7 +367,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Agenda ---- */}
       {showAgenda && (
-        <Section id="agenda" section="agenda" className={styles.agenda} {...sectionProps}>
+        <Section id="agenda" section="agenda" className={styles.agenda} style={sectionBg(agenda)} {...sectionProps}>
           <div className="container-narrow">
             {heading(agenda, t('agendaDefault'), true)}
             {agenda.image_path && (
@@ -386,7 +396,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Tickets ---- */}
       {showTickets && (
-        <Section id="tickets" section="tickets" className={styles.tickets} {...sectionProps}>
+        <Section id="tickets" section="tickets" className={styles.tickets} style={sectionBg(tickets)} {...sectionProps}>
           <div className="container">
             {heading(tickets, t('ticketsDefault'), true)}
             <div className={styles.tierGrid}>
@@ -425,7 +435,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Contact ---- */}
       {hasContact && (
-        <Section section="contact" className={styles.contact} {...sectionProps}>
+        <Section section="contact" className={styles.contact} style={sectionBg(contactSection)} {...sectionProps}>
           <div className={`container-narrow ${styles.contactInner}`}>
             <h2 className={styles.sectionTitle}>{t('contact')}</h2>
             <div className={styles.contactList}>
