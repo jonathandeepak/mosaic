@@ -50,6 +50,56 @@ function PencilIcon() {
   )
 }
 
+// Module scope on purpose: defining these inside EventPageView would give
+// them a new component identity each render, forcing React to remount the
+// whole section subtree on every parent update.
+
+function Section({ id, section, className, editable, onEditSection, editLabel, children }) {
+  return (
+    <section id={id} className={`${className ?? ''} ${editable ? styles.editable : ''}`}>
+      {children}
+      {editable && (
+        <button
+          type="button"
+          className={styles.pencil}
+          aria-label={editLabel}
+          title={editLabel}
+          onClick={() => onEditSection?.(section)}
+        >
+          <PencilIcon />
+        </button>
+      )}
+    </section>
+  )
+}
+
+function SectionHeading({ text, headingStyle, centered }) {
+  return (
+    <h2
+      className={`${styles.sectionTitle} ${centered ? styles.centered : ''}`}
+      style={textStyle(headingStyle)}
+    >
+      {text}
+    </h2>
+  )
+}
+
+function RegisterCta({ editable, registerHref, label }) {
+  const cls = `btn ${styles.registerBtn}`
+  if (editable) {
+    return (
+      <span className={cls} aria-disabled="true">
+        {label}
+      </span>
+    )
+  }
+  return (
+    <a className={cls} href={registerHref}>
+      {label}
+    </a>
+  )
+}
+
 /**
  * The public event landing page. Rendered by the public route AND by the
  * console's Event Page tab (editable=true adds hover pencils per section).
@@ -93,51 +143,18 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
     TITLE_SIZES
   )
 
-  function Section({ id, section, className, children }) {
-    return (
-      <section id={id} className={`${className ?? ''} ${editable ? styles.editable : ''}`}>
-        {children}
-        {editable && (
-          <button
-            type="button"
-            className={styles.pencil}
-            aria-label={t('edit')}
-            title={t('edit')}
-            onClick={() => onEditSection?.(section)}
-          >
-            <PencilIcon />
-          </button>
-        )}
-      </section>
-    )
-  }
-
-  function Heading({ sectionData, fallback, centered }) {
-    return (
-      <h2
-        className={`${styles.sectionTitle} ${centered ? styles.centered : ''}`}
-        style={textStyle(sectionData.heading_style)}
-      >
-        {L(sectionData.heading) || fallback}
-      </h2>
-    )
-  }
-
-  function RegisterButton() {
-    const cls = `btn ${styles.registerBtn}`
-    if (editable) {
-      return (
-        <span className={cls} aria-disabled="true">
-          {t('register')}
-        </span>
-      )
-    }
-    return (
-      <a className={cls} href={registerHref}>
-        {t('register')}
-      </a>
-    )
-  }
+  // Bound builders keep call sites terse while the components stay module-scope.
+  const sectionProps = { editable, onEditSection, editLabel: t('edit') }
+  const heading = (sectionData, fallback, centered) => (
+    <SectionHeading
+      text={L(sectionData.heading) || fallback}
+      headingStyle={sectionData.heading_style}
+      centered={centered}
+    />
+  )
+  const registerButton = (
+    <RegisterCta editable={editable} registerHref={registerHref} label={t('register')} />
+  )
 
   return (
     <div
@@ -147,7 +164,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
       data-custom-text={theme.text_color ? '' : undefined}
     >
       {/* ---- Hero ---- */}
-      <Section section="hero" className={styles.hero}>
+      <Section section="hero" className={styles.hero} {...sectionProps}>
         {coverUrl && (
           <div className={styles.heroBg} aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -173,7 +190,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
                 })}
               </p>
             ) : (
-              <RegisterButton />
+              registerButton
             )}
             {showAgenda && (
               <a className={`btn ${styles.heroGhostBtn}`} href="#agenda">
@@ -186,10 +203,10 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- About ---- */}
       {showAbout && (
-        <Section section="about" className={styles.about}>
+        <Section section="about" className={styles.about} {...sectionProps}>
           <div className={`container ${styles.aboutGrid}`}>
             <div className={styles.aboutText}>
-              <Heading sectionData={about} fallback={t('aboutDefault')} />
+              {heading(about, t('aboutDefault'))}
               {L(about.body) && <p className={styles.aboutBody}>{L(about.body)}</p>}
               {about.stats?.length > 0 && (
                 <div className={styles.stats}>
@@ -214,9 +231,9 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Speakers ---- */}
       {showSpeakers && (
-        <Section section="speakers" className={styles.speakers}>
+        <Section section="speakers" className={styles.speakers} {...sectionProps}>
           <div className="container">
-            <Heading sectionData={speakers} fallback={t('speakersDefault')} />
+            {heading(speakers, t('speakersDefault'))}
             <div className={styles.speakerGrid}>
               {speakers.items.map((sp) => (
                 <div key={sp.id} className={styles.speakerCard}>
@@ -242,9 +259,9 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Agenda ---- */}
       {showAgenda && (
-        <Section id="agenda" section="agenda" className={styles.agenda}>
+        <Section id="agenda" section="agenda" className={styles.agenda} {...sectionProps}>
           <div className="container-narrow">
-            <Heading sectionData={agenda} fallback={t('agendaDefault')} centered />
+            {heading(agenda, t('agendaDefault'), true)}
             {agenda.image_path && (
               <div className={styles.agendaMedia}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -271,9 +288,9 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Tickets ---- */}
       {showTickets && (
-        <Section id="tickets" section="tickets" className={styles.tickets}>
+        <Section id="tickets" section="tickets" className={styles.tickets} {...sectionProps}>
           <div className="container">
-            <Heading sectionData={tickets} fallback={t('ticketsDefault')} centered />
+            {heading(tickets, t('ticketsDefault'), true)}
             <div className={styles.tierGrid}>
               {tickets.items.map((tier) => {
                 const highlightStyle =
@@ -299,7 +316,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
                           ))}
                       </ul>
                     )}
-                    {!closed && !notOpenYet && <RegisterButton />}
+                    {!closed && !notOpenYet && registerButton}
                   </div>
                 )
               })}
@@ -310,7 +327,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
 
       {/* ---- Contact ---- */}
       {hasContact && (
-        <Section section="contact" className={styles.contact}>
+        <Section section="contact" className={styles.contact} {...sectionProps}>
           <div className={`container-narrow ${styles.contactInner}`}>
             <h2 className={styles.sectionTitle}>{t('contact')}</h2>
             <div className={styles.contactList}>

@@ -18,6 +18,101 @@ function newId() {
   return Math.random().toString(36).slice(2, 10)
 }
 
+// These editors are defined at module scope ON PURPOSE: declaring components
+// inside EventPageEditor gives them a new identity on every render, which
+// makes React remount them — and any focused input loses focus after each
+// keystroke.
+
+function ColorField({ label, resetLabel, value, defaultValue, onChange }) {
+  return (
+    <div className={styles.colorField}>
+      <span className="field-label">{label}</span>
+      <div className={styles.panelRow}>
+        <input
+          type="color"
+          className={styles.colorInput}
+          value={value || defaultValue}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {value && (
+          <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
+            {resetLabel}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function StyleSelects({ t, style = {}, onChange }) {
+  return (
+    <div className={styles.panelRow}>
+      <NativeSelect
+        value={style.size ?? ''}
+        onChange={(e) => onChange({ ...style, size: e.target.value || undefined })}
+        aria-label={t('fontSize')}
+      >
+        {SIZE_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s === '' ? t('sizeDefault') : t(`size_${s}`)}
+          </option>
+        ))}
+      </NativeSelect>
+      <NativeSelect
+        value={style.font ?? 'default'}
+        onChange={(e) => onChange({ ...style, font: e.target.value === 'default' ? undefined : e.target.value })}
+        aria-label={t('fontFamily')}
+      >
+        {FONT_OPTIONS.map((f) => (
+          <option key={f} value={f}>
+            {t(`font_${f}`)}
+          </option>
+        ))}
+      </NativeSelect>
+    </div>
+  )
+}
+
+function HeadingStyleEditor({ t, previewLocale, data = {}, defaultHeading, onPatch }) {
+  const hs = data.heading_style ?? {}
+  const setStyle = (next) => onPatch({ heading_style: next })
+  return (
+    <div className={styles.headingEditor}>
+      <Field label={`${t('heading')} (${previewLocale})`}>
+        {({ id }) => (
+          <Input
+            id={id}
+            placeholder={defaultHeading}
+            value={data.heading?.[previewLocale] ?? ''}
+            onChange={(e) =>
+              onPatch({ heading: { ...(data.heading ?? {}), [previewLocale]: e.target.value } })
+            }
+          />
+        )}
+      </Field>
+      <StyleSelects t={t} style={hs} onChange={setStyle} />
+      <ColorField
+        label={t('headingColor')}
+        resetLabel={t('resetColor')}
+        value={hs.color}
+        defaultValue="#20242b"
+        onChange={(color) => setStyle({ ...hs, color: color ?? undefined })}
+      />
+    </div>
+  )
+}
+
+function SectionHeader({ title, toggleLabel, enabled, onToggle }) {
+  return (
+    <div className={styles.panelSectionHead}>
+      <h3>{title}</h3>
+      {onToggle && (
+        <CheckboxRow label={toggleLabel} checked={enabled} onCheckedChange={onToggle} />
+      )}
+    </div>
+  )
+}
+
 export function EventPageEditor({ initialEvent }) {
   const t = useTranslations('console')
   const uiLocale = useLocale()
@@ -195,82 +290,26 @@ export function EventPageEditor({ initialEvent }) {
 
   // ---- panel section editors ----------------------------------------------
 
-  function ColorField({ label, value, defaultValue, onChange }) {
-    return (
-      <div className={styles.colorField}>
-        <span className="field-label">{label}</span>
-        <div className={styles.panelRow}>
-          <input
-            type="color"
-            className={styles.colorInput}
-            value={value || defaultValue}
-            onChange={(e) => onChange(e.target.value)}
-          />
-          {value && (
-            <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
-              {t('resetColor')}
-            </Button>
-          )}
-        </div>
-      </div>
-    )
-  }
+  // Bound builders for the module-scope editor components. Plain functions
+  // returning JSX keep the element type stable across renders (no remounts).
+  const sectionHeader = (section) => (
+    <SectionHeader
+      title={t(`section_${section}`)}
+      toggleLabel={t('showSection')}
+      enabled={!!content[section]?.enabled}
+      onToggle={(checked) => patchContent(section, { enabled: !!checked })}
+    />
+  )
 
-  function StyleSelects({ style = {}, onChange }) {
-    return (
-      <div className={styles.panelRow}>
-        <NativeSelect
-          value={style.size ?? ''}
-          onChange={(e) => onChange({ ...style, size: e.target.value || undefined })}
-          aria-label={t('fontSize')}
-        >
-          {SIZE_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s === '' ? t('sizeDefault') : t(`size_${s}`)}
-            </option>
-          ))}
-        </NativeSelect>
-        <NativeSelect
-          value={style.font ?? 'default'}
-          onChange={(e) => onChange({ ...style, font: e.target.value === 'default' ? undefined : e.target.value })}
-          aria-label={t('fontFamily')}
-        >
-          {FONT_OPTIONS.map((f) => (
-            <option key={f} value={f}>
-              {t(`font_${f}`)}
-            </option>
-          ))}
-        </NativeSelect>
-      </div>
-    )
-  }
-
-  function HeadingStyleEditor({ section, defaultHeading }) {
-    const data = content[section] ?? {}
-    const hs = data.heading_style ?? {}
-    const setStyle = (next) => patchContent(section, { heading_style: next })
-    return (
-      <div className={styles.headingEditor}>
-        <Field label={`${t('heading')} (${previewLocale})`}>
-          {({ id }) => (
-            <Input
-              id={id}
-              placeholder={defaultHeading}
-              value={lv(data.heading)}
-              onChange={(e) => patchContent(section, { heading: setLv(data.heading, e.target.value) })}
-            />
-          )}
-        </Field>
-        <StyleSelects style={hs} onChange={setStyle} />
-        <ColorField
-          label={t('headingColor')}
-          value={hs.color}
-          defaultValue="#20242b"
-          onChange={(color) => setStyle({ ...hs, color: color ?? undefined })}
-        />
-      </div>
-    )
-  }
+  const headingEditor = (section) => (
+    <HeadingStyleEditor
+      t={t}
+      previewLocale={previewLocale}
+      data={content[section]}
+      defaultHeading={t(`section_${section}`)}
+      onPatch={(patch) => patchContent(section, patch)}
+    />
+  )
 
   function renderTheme() {
     const theme = content.theme ?? {}
@@ -279,12 +318,14 @@ export function EventPageEditor({ initialEvent }) {
       <>
         <ColorField
           label={t('pageBackground')}
+          resetLabel={t('resetColor')}
           value={theme.page_bg}
           defaultValue="#faf9f6"
           onChange={(c) => setTheme({ page_bg: c ?? undefined })}
         />
         <ColorField
           label={t('textColor')}
+          resetLabel={t('resetColor')}
           value={theme.text_color}
           defaultValue="#20242b"
           onChange={(c) => setTheme({ text_color: c ?? undefined })}
@@ -292,30 +333,17 @@ export function EventPageEditor({ initialEvent }) {
         <h4 className={styles.panelSubhead}>{t('heroTitleStyle')}</h4>
         <ColorField
           label={t('titleColor')}
+          resetLabel={t('resetColor')}
           value={theme.title_color}
           defaultValue="#ffffff"
           onChange={(c) => setTheme({ title_color: c ?? undefined })}
         />
         <StyleSelects
+          t={t}
           style={{ size: theme.title_size, font: theme.title_font }}
           onChange={(s) => setTheme({ title_size: s.size, title_font: s.font })}
         />
       </>
-    )
-  }
-
-  function SectionHeader({ section, toggleable }) {
-    return (
-      <div className={styles.panelSectionHead}>
-        <h3>{t(`section_${section}`)}</h3>
-        {toggleable && (
-          <CheckboxRow
-            label={t('showSection')}
-            checked={!!content[section]?.enabled}
-            onCheckedChange={(checked) => patchContent(section, { enabled: !!checked })}
-          />
-        )}
-      </div>
     )
   }
 
@@ -385,8 +413,8 @@ export function EventPageEditor({ initialEvent }) {
     const about = content.about ?? {}
     return (
       <>
-        <SectionHeader section="about" toggleable />
-        <HeadingStyleEditor section="about" defaultHeading={t('section_about')} />
+        {sectionHeader('about')}
+        {headingEditor('about')}
         <Field label={`${t('body')} (${previewLocale})`}>
           {({ id }) => (
             <Textarea
@@ -464,8 +492,8 @@ export function EventPageEditor({ initialEvent }) {
     const items = content.speakers?.items ?? []
     return (
       <>
-        <SectionHeader section="speakers" toggleable />
-        <HeadingStyleEditor section="speakers" defaultHeading={t('section_speakers')} />
+        {sectionHeader('speakers')}
+        {headingEditor('speakers')}
         <input ref={speakerInputRef} type="file" accept="image/*" hidden onChange={onSpeakerFile} />
         {items.map((sp) => (
           <div key={sp.id} className={styles.panelItem}>
@@ -539,8 +567,8 @@ export function EventPageEditor({ initialEvent }) {
     const items = agenda.items ?? []
     return (
       <>
-        <SectionHeader section="agenda" toggleable />
-        <HeadingStyleEditor section="agenda" defaultHeading={t('section_agenda')} />
+        {sectionHeader('agenda')}
+        {headingEditor('agenda')}
         <input ref={agendaImgInputRef} type="file" accept="image/*" hidden onChange={onAgendaImgFile} />
         {agenda.image_path && (
           /* eslint-disable-next-line @next/next/no-img-element */
@@ -599,10 +627,11 @@ export function EventPageEditor({ initialEvent }) {
     const items = tickets.items ?? []
     return (
       <>
-        <SectionHeader section="tickets" toggleable />
-        <HeadingStyleEditor section="tickets" defaultHeading={t('section_tickets')} />
+        {sectionHeader('tickets')}
+        {headingEditor('tickets')}
         <ColorField
           label={t('highlightColor')}
+          resetLabel={t('resetColor')}
           value={tickets.highlight_color}
           defaultValue="#0e5044"
           onChange={(c) => patchContent('tickets', { highlight_color: c ?? undefined })}
