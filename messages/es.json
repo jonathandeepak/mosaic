@@ -251,7 +251,9 @@
     "publishFailed": "Error al publicar: el formulario no se ha publicado",
     "loadError": "No se pudieron cargar los participantes. Ajusta la búsqueda o inténtalo de nuevo.",
     "navHome": "Inicio",
-    "navMyEvents": "Mis eventos"
+    "navMyEvents": "Mis eventos",
+    "viewDetail": "Ver",
+    "participantDetail": "Detalles del participante"
   },
   "questionTypes": {
     "text": "Texto corto",

@@ -251,7 +251,9 @@
     "publishFailed": "Publishing failed — the form was not published",
     "loadError": "Could not load participants. Adjust your search or try again.",
     "navHome": "Home",
-    "navMyEvents": "My Events"
+    "navMyEvents": "My Events",
+    "viewDetail": "View",
+    "participantDetail": "Participant details"
   },
   "questionTypes": {
     "text": "Short text",
