@@ -282,6 +282,49 @@
   min-width: 0;
 }
 
+/* Icon picker for stats: a wrap of square swatches. */
+.iconPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.iconOption {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: var(--text-md);
+}
+
+.iconOption:hover {
+  border-color: var(--pine);
+  color: var(--pine-deep);
+}
+
+.iconOption[data-active] {
+  border-color: var(--pine);
+  background: var(--pine-tint);
+  color: var(--pine-deep);
+}
+
+.iconUploaded {
+  overflow: hidden;
+}
+
+.iconUploaded img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Numbered badge on each stat card. */
 .statNumber {
   flex-shrink: 0;

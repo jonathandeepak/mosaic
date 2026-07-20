@@ -279,7 +279,11 @@
     "roleColor": "Color del cargo",
     "showHeroAgendaBtn": "Mostrar botón \"Ver agenda\" en la portada",
     "statsHelp": "Cifras destacadas que aparecen en la sección Sobre, p. ej. «50+» y «Talleres».",
-    "statLabelPlaceholder": "p. ej. Talleres"
+    "statLabelPlaceholder": "p. ej. Talleres",
+    "statIcon": "Icono",
+    "iconNone": "Sin icono",
+    "uploadIcon": "Subir icono",
+    "highlightStat": "Destacar esta cifra"
   },
   "questionTypes": {
     "text": "Texto corto",

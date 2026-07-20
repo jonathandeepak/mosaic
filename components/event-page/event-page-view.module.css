@@ -210,13 +210,17 @@
 .aboutGrid {
   display: grid;
   gap: var(--s-6);
-  align-items: center;
+  align-items: stretch;
 }
 
 @media (min-width: 56rem) {
   .aboutGrid {
     grid-template-columns: 1.1fr 0.9fr;
   }
+}
+
+.aboutMedia {
+  height: 100%;
 }
 
 .aboutBody {
@@ -229,6 +233,9 @@
 
 .aboutMedia img {
   width: 100%;
+  height: 100%;
+  min-height: 16rem;
+  object-fit: cover;
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-lg);
 }
@@ -258,6 +265,31 @@
 .stat span {
   font-size: var(--text-xs);
   color: var(--ink-soft);
+}
+
+.statIcon {
+  display: inline-flex;
+  margin-bottom: var(--s-1);
+  color: var(--ink);
+}
+
+.statIcon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Highlighted stat: filled card. When a custom color is set it comes via
+   inline style; otherwise fall back to the ink color. Text turns light. */
+.statHighlight {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.statHighlight strong,
+.statHighlight span,
+.statHighlight .statIcon {
+  color: #fff;
 }
 
 /* ---- speakers ---- */

@@ -279,7 +279,11 @@
     "roleColor": "Role Color",
     "showHeroAgendaBtn": "Show \"View Agenda\" Button in Hero",
     "statsHelp": "Short highlights shown in the About section, e.g. “50+” and “Workshops”.",
-    "statLabelPlaceholder": "e.g. Workshops"
+    "statLabelPlaceholder": "e.g. Workshops",
+    "statIcon": "Icon",
+    "iconNone": "No icon",
+    "uploadIcon": "Upload icon",
+    "highlightStat": "Highlight This Stat"
   },
   "questionTypes": {
     "text": "Short text",

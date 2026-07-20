@@ -279,7 +279,11 @@
     "roleColor": "Колір ролі",
     "showHeroAgendaBtn": "Показувати кнопку «Переглянути програму» в шапці",
     "statsHelp": "Короткі цифри в розділі «Про подію», напр. «50+» та «Воркшопи».",
-    "statLabelPlaceholder": "напр. Воркшопи"
+    "statLabelPlaceholder": "напр. Воркшопи",
+    "statIcon": "Значок",
+    "iconNone": "Без значка",
+    "uploadIcon": "Завантажити значок",
+    "highlightStat": "Виділити цю цифру"
   },
   "questionTypes": {
     "text": "Короткий текст",

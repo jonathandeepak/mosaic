@@ -279,7 +279,11 @@
     "roleColor": "Couleur du rôle",
     "showHeroAgendaBtn": "Afficher le bouton \"Voir l'agenda\" dans l'en-tête",
     "statsHelp": "Chiffres clés affichés dans la section À propos, p. ex. « 50+ » et « Ateliers ».",
-    "statLabelPlaceholder": "p. ex. Ateliers"
+    "statLabelPlaceholder": "p. ex. Ateliers",
+    "statIcon": "Icône",
+    "iconNone": "Aucune icône",
+    "uploadIcon": "Téléverser une icône",
+    "highlightStat": "Mettre ce chiffre en avant"
   },
   "questionTypes": {
     "text": "Texte court",

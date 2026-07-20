@@ -8,6 +8,7 @@ import { LOCALES, LOCALE_NAMES } from '@/lib/i18n/locales'
 import { eventMediaUrl } from '@/lib/storage'
 import { Button, CheckboxRow, Field, Input, NativeSelect, Textarea } from '@/components/ui'
 import { EventPageView, FONT_CHOICES } from '@/components/event-page/EventPageView'
+import { StatIcon, STAT_ICON_KEYS } from '@/components/event-page/stat-icons'
 import styles from './event-page.module.css'
 
 const SECTIONS = ['theme', 'basics', 'hero', 'about', 'speakers', 'agenda', 'tickets', 'contact']
@@ -170,6 +171,8 @@ export function EventPageEditor({ initialEvent }) {
   const agendaImgInputRef = useRef(null)
   const speakerInputRef = useRef(null)
   const speakerUploadTarget = useRef(null)
+  const statInputRef = useRef(null)
+  const statUploadTarget = useRef(null)
 
   useEffect(() => {
     setOrigin(window.location.origin)
@@ -339,6 +342,25 @@ export function EventPageEditor({ initialEvent }) {
     if (file) {
       const path = await upload(file, 'agenda')
       if (path) patchContent('agenda', { image_path: path })
+    }
+    e.target.value = ''
+  }
+
+  async function onStatFile(e) {
+    const file = e.target.files?.[0]
+    const idx = statUploadTarget.current
+    if (file && idx != null) {
+      const path = await upload(file, `stat-${idx}`)
+      if (path) {
+        setEvent((prev) => {
+          const pc = prev.page_content ?? {}
+          const stats = (pc.about?.stats ?? []).map((x, j) =>
+            j === idx ? { ...x, icon_path: path, icon: undefined } : x
+          )
+          return { ...prev, page_content: { ...pc, about: { ...(pc.about ?? {}), stats } } }
+        })
+        markDirty()
+      }
     }
     e.target.value = ''
   }
@@ -608,57 +630,111 @@ export function EventPageEditor({ initialEvent }) {
 
         <h4 className={styles.panelSubhead}>{t('stats')}</h4>
         <p className="field-help">{t('statsHelp')}</p>
-        {(about.stats ?? []).map((s, i) => (
-          <div key={i} className={styles.panelItem}>
-            <div className={styles.statNumber} aria-hidden="true">
-              {i + 1}
-            </div>
-            <div className={styles.panelItemFields}>
-              <Field label={t('statValue')}>
-                {({ id }) => (
-                  <Input
-                    id={id}
-                    placeholder="50+"
-                    value={s.value ?? ''}
-                    onChange={(e) =>
-                      patchContent('about', {
-                        stats: about.stats.map((x, j) =>
-                          j === i ? { ...x, value: e.target.value } : x
-                        ),
-                      })
-                    }
+        <input ref={statInputRef} type="file" accept="image/*" hidden onChange={onStatFile} />
+        {(about.stats ?? []).map((s, i) => {
+          const updateStat = (patch) =>
+            patchContent('about', {
+              stats: about.stats.map((x, j) => (j === i ? { ...x, ...patch } : x)),
+            })
+          return (
+            <div key={i} className={styles.panelItem}>
+              <div className={styles.statNumber} aria-hidden="true">
+                {i + 1}
+              </div>
+              <div className={styles.panelItemFields}>
+                <Field label={t('statValue')}>
+                  {({ id }) => (
+                    <Input
+                      id={id}
+                      placeholder="50+"
+                      value={s.value ?? ''}
+                      onChange={(e) => updateStat({ value: e.target.value })}
+                    />
+                  )}
+                </Field>
+                <Field label={`${t('statLabel')} (${previewLocale})`}>
+                  {({ id }) => (
+                    <Input
+                      id={id}
+                      placeholder={t('statLabelPlaceholder')}
+                      value={s.label?.[previewLocale] ?? ''}
+                      onChange={(e) =>
+                        updateStat({ label: { ...(s.label ?? {}), [previewLocale]: e.target.value } })
+                      }
+                    />
+                  )}
+                </Field>
+
+                <span className="field-label">{t('statIcon')}</span>
+                <div className={styles.iconPicker}>
+                  <button
+                    type="button"
+                    className={styles.iconOption}
+                    data-active={!s.icon && !s.icon_path ? '' : undefined}
+                    title={t('iconNone')}
+                    onClick={() => updateStat({ icon: undefined, icon_path: undefined })}
+                  >
+                    ∅
+                  </button>
+                  {STAT_ICON_KEYS.map((key) => (
+                    <button
+                      type="button"
+                      key={key}
+                      className={styles.iconOption}
+                      data-active={s.icon === key && !s.icon_path ? '' : undefined}
+                      title={key}
+                      onClick={() => updateStat({ icon: key, icon_path: undefined })}
+                    >
+                      <StatIcon name={key} size={20} />
+                    </button>
+                  ))}
+                  {s.icon_path && (
+                    <span className={`${styles.iconOption} ${styles.iconUploaded}`} data-active="">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={eventMediaUrl(s.icon_path)} alt="" />
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    statUploadTarget.current = i
+                    statInputRef.current?.click()
+                  }}
+                >
+                  {s.icon_path ? t('changeImage') : t('uploadIcon')}
+                </Button>
+
+                <CheckboxRow
+                  label={t('highlightStat')}
+                  checked={!!s.highlighted}
+                  onCheckedChange={(checked) => updateStat({ highlighted: !!checked })}
+                />
+                {s.highlighted && (
+                  <ColorField
+                    label={t('highlightColor')}
+                    addLabel={t('addColor')}
+                    resetLabel={t('resetColor')}
+                    value={s.highlight_color}
+                    defaultValue={isDark ? '#ffffff' : '#111111'}
+                    onChange={(c) => updateStat({ highlight_color: c ?? undefined })}
                   />
                 )}
-              </Field>
-              <Field label={`${t('statLabel')} (${previewLocale})`}>
-                {({ id }) => (
-                  <Input
-                    id={id}
-                    placeholder={t('statLabelPlaceholder')}
-                    value={lv(s.label)}
-                    onChange={(e) =>
-                      patchContent('about', {
-                        stats: about.stats.map((x, j) =>
-                          j === i ? { ...x, label: setLv(x.label, e.target.value) } : x
-                        ),
-                      })
-                    }
-                  />
-                )}
-              </Field>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={t('remove')}
+                onClick={() =>
+                  patchContent('about', { stats: about.stats.filter((_, j) => j !== i) })
+                }
+              >
+                ✕
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label={t('remove')}
-              onClick={() =>
-                patchContent('about', { stats: about.stats.filter((_, j) => j !== i) })
-              }
-            >
-              ✕
-            </Button>
-          </div>
-        ))}
+          )
+        })}
         <Button
           variant="secondary"
           size="sm"

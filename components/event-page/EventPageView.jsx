@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { lt } from '@/lib/i18n/locales'
 import { formatEventDate, formatEventDateRange } from '@/lib/dates'
 import { eventMediaUrl } from '@/lib/storage'
+import { StatIcon } from './stat-icons'
 import styles from './event-page-view.module.css'
 
 // Style options shared with the console editor.
@@ -283,12 +284,29 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
               {L(about.body) && <p className={styles.aboutBody}>{L(about.body)}</p>}
               {about.stats?.length > 0 && (
                 <div className={styles.stats}>
-                  {about.stats.map((s, i) => (
-                    <div key={i} className={styles.stat}>
-                      <strong>{s.value}</strong>
-                      <span>{L(s.label)}</span>
-                    </div>
-                  ))}
+                  {about.stats.map((s, i) => {
+                    const hi = s.highlighted && s.highlight_color
+                    return (
+                      <div
+                        key={i}
+                        className={`${styles.stat} ${s.highlighted ? styles.statHighlight : ''}`}
+                        style={hi ? { background: s.highlight_color, borderColor: s.highlight_color } : undefined}
+                      >
+                        {(s.icon_path || s.icon) && (
+                          <span className={styles.statIcon}>
+                            {s.icon_path ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img src={eventMediaUrl(s.icon_path)} alt="" />
+                            ) : (
+                              <StatIcon name={s.icon} />
+                            )}
+                          </span>
+                        )}
+                        <strong>{s.value}</strong>
+                        <span>{L(s.label)}</span>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
