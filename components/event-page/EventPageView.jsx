@@ -21,12 +21,22 @@ export const TITLE_SIZES = {
   xl: 'clamp(3rem, 7vw, 4.5rem)',
 }
 
-export const FONT_FAMILIES = {
-  default: null, // inherit the site's display font
-  sans: 'var(--font-body), system-ui, sans-serif',
-  serif: 'Georgia, "Times New Roman", serif',
-  mono: 'ui-monospace, "SF Mono", Menlo, monospace',
-}
+// Font options offered in the customize panel. `label: null` means the label
+// comes from a translation ("Site font"); named fonts show their own name.
+// Each family references a CSS variable loaded via next/font in the layout.
+export const FONT_CHOICES = [
+  { key: 'default', label: null, family: null },
+  { key: 'inter', label: 'Inter', family: 'var(--font-inter), system-ui, sans-serif' },
+  { key: 'roboto', label: 'Roboto', family: 'var(--font-roboto), system-ui, sans-serif' },
+  { key: 'dmsans', label: 'DM Sans', family: 'var(--font-dm-sans), system-ui, sans-serif' },
+  { key: 'poppins', label: 'Poppins', family: 'var(--font-poppins), system-ui, sans-serif' },
+  { key: 'jakarta', label: 'Plus Jakarta Sans', family: 'var(--font-jakarta), system-ui, sans-serif' },
+  { key: 'sans', label: 'IBM Plex Sans', family: 'var(--font-body), system-ui, sans-serif' },
+  { key: 'serif', label: 'Serif', family: 'Georgia, "Times New Roman", serif' },
+  { key: 'mono', label: 'Mono', family: 'ui-monospace, "SF Mono", Menlo, monospace' },
+]
+
+export const FONT_FAMILIES = Object.fromEntries(FONT_CHOICES.map((c) => [c.key, c.family]))
 
 function textStyle(hs = {}, sizes = HEADING_SIZES) {
   const style = {}
@@ -54,9 +64,14 @@ function PencilIcon() {
 // them a new component identity each render, forcing React to remount the
 // whole section subtree on every parent update.
 
-function Section({ id, section, className, editable, onEditSection, editLabel, children }) {
+function Section({ id, section, className, style, dataFlat, editable, onEditSection, editLabel, children }) {
   return (
-    <section id={id} className={`${className ?? ''} ${editable ? styles.editable : ''}`}>
+    <section
+      id={id}
+      className={`${className ?? ''} ${editable ? styles.editable : ''}`}
+      style={style}
+      data-flat-hero={dataFlat ? '' : undefined}
+    >
       {children}
       {editable && (
         <button
@@ -137,11 +152,24 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
   const pageStyle = {}
   if (theme.page_bg) pageStyle['--ep-bg'] = theme.page_bg
   if (theme.text_color) pageStyle['--ep-text'] = theme.text_color
+  if (theme.body_font && FONT_FAMILIES[theme.body_font]) {
+    pageStyle.fontFamily = FONT_FAMILIES[theme.body_font]
+  }
 
   const titleStyle = textStyle(
     { color: theme.title_color, size: theme.title_size, font: theme.title_font },
     TITLE_SIZES
   )
+
+  // With no cover image, let the hero adopt the chosen page colors so theme
+  // changes are visible at the very top of the page (otherwise it keeps its
+  // default pine gradient and looks unaffected).
+  const flatHero = !coverUrl && (theme.page_bg || theme.text_color)
+  const heroStyle = {}
+  if (flatHero) {
+    if (theme.page_bg) heroStyle.background = theme.page_bg
+    if (theme.text_color) heroStyle.color = theme.text_color
+  }
 
   // Bound builders keep call sites terse while the components stay module-scope.
   const sectionProps = { editable, onEditSection, editLabel: t('edit') }
@@ -164,7 +192,13 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
       data-custom-text={theme.text_color ? '' : undefined}
     >
       {/* ---- Hero ---- */}
-      <Section section="hero" className={styles.hero} {...sectionProps}>
+      <Section
+        section="hero"
+        className={styles.hero}
+        style={heroStyle}
+        dataFlat={flatHero}
+        {...sectionProps}
+      >
         {coverUrl && (
           <div className={styles.heroBg} aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}

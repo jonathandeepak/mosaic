@@ -67,6 +67,17 @@
   color: #fff;
 }
 
+/* No cover image + custom colors: hero uses the chosen page bg/text (set
+   inline) and drops its white-on-pine treatment so the theme shows at top. */
+.hero[data-flat-hero] {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.hero[data-flat-hero] .heroDescription {
+  color: inherit;
+  opacity: 0.8;
+}
+
 .heroBg {
   position: absolute;
   inset: 0;

@@ -7,12 +7,11 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { LOCALES, LOCALE_NAMES } from '@/lib/i18n/locales'
 import { eventMediaUrl } from '@/lib/storage'
 import { Button, CheckboxRow, Field, Input, NativeSelect, Textarea } from '@/components/ui'
-import { EventPageView } from '@/components/event-page/EventPageView'
+import { EventPageView, FONT_CHOICES } from '@/components/event-page/EventPageView'
 import styles from './event-page.module.css'
 
 const SECTIONS = ['theme', 'basics', 'hero', 'about', 'speakers', 'agenda', 'tickets', 'contact']
 const SIZE_OPTIONS = ['', 'sm', 'md', 'lg', 'xl']
-const FONT_OPTIONS = ['default', 'sans', 'serif', 'mono']
 
 function newId() {
   return Math.random().toString(36).slice(2, 10)
@@ -44,6 +43,22 @@ function ColorField({ label, resetLabel, value, defaultValue, onChange }) {
   )
 }
 
+function FontSelect({ t, value, onChange }) {
+  return (
+    <NativeSelect
+      value={value ?? 'default'}
+      onChange={(e) => onChange(e.target.value === 'default' ? undefined : e.target.value)}
+      aria-label={t('fontFamily')}
+    >
+      {FONT_CHOICES.map((c) => (
+        <option key={c.key} value={c.key} style={c.family ? { fontFamily: c.family } : undefined}>
+          {c.label ?? t('font_default')}
+        </option>
+      ))}
+    </NativeSelect>
+  )
+}
+
 function StyleSelects({ t, style = {}, onChange }) {
   return (
     <div className={styles.panelRow}>
@@ -58,17 +73,11 @@ function StyleSelects({ t, style = {}, onChange }) {
           </option>
         ))}
       </NativeSelect>
-      <NativeSelect
-        value={style.font ?? 'default'}
-        onChange={(e) => onChange({ ...style, font: e.target.value === 'default' ? undefined : e.target.value })}
-        aria-label={t('fontFamily')}
-      >
-        {FONT_OPTIONS.map((f) => (
-          <option key={f} value={f}>
-            {t(`font_${f}`)}
-          </option>
-        ))}
-      </NativeSelect>
+      <FontSelect
+        t={t}
+        value={style.font}
+        onChange={(font) => onChange({ ...style, font })}
+      />
     </div>
   )
 }
@@ -145,35 +154,72 @@ export function EventPageEditor({ initialEvent }) {
 
   // ---- state helpers -------------------------------------------------------
 
-  function patchEvent(patch) {
-    setEvent((prev) => ({ ...prev, ...patch }))
+  function markDirty() {
     setDirty(true)
     setSaveState('idle')
   }
 
+  function patchEvent(patch) {
+    setEvent((prev) => ({ ...prev, ...patch }))
+    markDirty()
+  }
+
+  // Functional updates: colors/text can change in quick succession, so always
+  // derive from the latest state rather than a value captured at render time.
   function patchContent(section, patch) {
-    patchEvent({
-      page_content: {
-        ...content,
-        [section]: { ...(content[section] ?? {}), ...patch },
-      },
+    setEvent((prev) => {
+      const pc = prev.page_content ?? {}
+      return { ...prev, page_content: { ...pc, [section]: { ...(pc[section] ?? {}), ...patch } } }
     })
+    markDirty()
   }
 
   function patchItem(section, id, patch) {
-    const items = content[section]?.items ?? []
-    patchContent(section, {
-      items: items.map((it) => (it.id === id ? { ...it, ...patch } : it)),
+    setEvent((prev) => {
+      const pc = prev.page_content ?? {}
+      const items = pc[section]?.items ?? []
+      return {
+        ...prev,
+        page_content: {
+          ...pc,
+          [section]: {
+            ...(pc[section] ?? {}),
+            items: items.map((it) => (it.id === id ? { ...it, ...patch } : it)),
+          },
+        },
+      }
     })
+    markDirty()
   }
 
   function addItem(section, item) {
-    const items = content[section]?.items ?? []
-    patchContent(section, { enabled: true, items: [...items, { id: newId(), ...item }] })
+    setEvent((prev) => {
+      const pc = prev.page_content ?? {}
+      const items = pc[section]?.items ?? []
+      return {
+        ...prev,
+        page_content: {
+          ...pc,
+          [section]: { ...(pc[section] ?? {}), enabled: true, items: [...items, { id: newId(), ...item }] },
+        },
+      }
+    })
+    markDirty()
   }
 
   function removeItem(section, id) {
-    patchContent(section, { items: (content[section]?.items ?? []).filter((it) => it.id !== id) })
+    setEvent((prev) => {
+      const pc = prev.page_content ?? {}
+      const items = pc[section]?.items ?? []
+      return {
+        ...prev,
+        page_content: {
+          ...pc,
+          [section]: { ...(pc[section] ?? {}), items: items.filter((it) => it.id !== id) },
+        },
+      }
+    })
+    markDirty()
   }
 
   // Localized value helpers — edit the text for the previewed language.
@@ -330,6 +376,10 @@ export function EventPageEditor({ initialEvent }) {
           defaultValue="#20242b"
           onChange={(c) => setTheme({ text_color: c ?? undefined })}
         />
+        <div className={styles.colorField}>
+          <span className="field-label">{t('pageFont')}</span>
+          <FontSelect t={t} value={theme.body_font} onChange={(f) => setTheme({ body_font: f })} />
+        </div>
         <h4 className={styles.panelSubhead}>{t('heroTitleStyle')}</h4>
         <ColorField
           label={t('titleColor')}

@@ -259,7 +259,8 @@
     "uploading": "Uploading image…",
     "uploadBadType": "Unsupported file type. Use JPG, PNG, WebP or AVIF.",
     "uploadTooLarge": "Image is too large. Maximum size is 5 MB.",
-    "uploadFailed": "Upload failed. Please try again."
+    "uploadFailed": "Upload failed. Please try again.",
+    "pageFont": "Whole-page font"
   },
   "questionTypes": {
     "text": "Short text",
