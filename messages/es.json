@@ -279,7 +279,13 @@
     "nameFormatFirstMiddleLast": "Nombre + segundo nombre + apellido",
     "addressParts": "Campos de dirección",
     "viewDetail": "Ver",
-    "participantDetail": "Detalles del participante"
+    "participantDetail": "Detalles del participante",
+    "joinEvents": "Unirse a eventos",
+    "joinEventsHelp": "Puedes solicitar acceso para organizar o ver otros eventos en esta organización.",
+    "joinEventsAllAccess": "Tienes acceso de administrador y puedes ver todos los eventos.",
+    "joinEventsEmpty": "No hay otros eventos activos a los que unirse.",
+    "joinByCode": "Unirse por código de evento",
+    "joinByCodeHelp": "Introduce el slug/código del evento (por ejemplo, summer-conference-2026) para solicitar acceso de organizador."
   },
   "questionTypes": {
     "text": "Texto corto",
