@@ -336,7 +336,10 @@
     "testimonialLayout": "Макет",
     "testimonialLayoutCards": "Картки",
     "testimonialLayoutQuote": "Мінімалістична цитата (по центру)",
-    "testimonialHeadingHelp": "Заголовок необов'язковий — залиште порожнім, щоб показувати лише цитати."
+    "testimonialHeadingHelp": "Заголовок необов'язковий — залиште порожнім, щоб показувати лише цитати.",
+    "chipStyle": "Стиль плашки",
+    "chipStylePill": "Плашка (з тлом)",
+    "chipStyleText": "Лише текст"
   },
   "questionTypes": {
     "text": "Короткий текст",

@@ -235,11 +235,17 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
     <>
       {hero.show_chip !== false && (
         <span
-          className={styles.heroChip}
-          style={{
-            ...(chipBg ? { background: chipBg, borderColor: chipBg } : {}),
-            ...(hero.chip_text ? { color: hero.chip_text } : {}),
-          }}
+          className={hero.chip_style === 'text' ? styles.heroChipPlain : styles.heroChip}
+          style={
+            hero.chip_style === 'text'
+              ? hero.chip_text
+                ? { color: hero.chip_text }
+                : undefined
+              : {
+                  ...(chipBg ? { background: chipBg, borderColor: chipBg } : {}),
+                  ...(hero.chip_text ? { color: hero.chip_text } : {}),
+                }
+          }
         >
           {formatEventDateRange(event.starts_at, event.ends_at, event.timezone, locale)}
           {location ? ` · ${location}` : ''}

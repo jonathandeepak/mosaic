@@ -336,7 +336,10 @@
     "testimonialLayout": "Layout",
     "testimonialLayoutCards": "Cards",
     "testimonialLayoutQuote": "Minimal Quote (centered)",
-    "testimonialHeadingHelp": "The heading is optional — leave it empty to show only the quotes."
+    "testimonialHeadingHelp": "The heading is optional — leave it empty to show only the quotes.",
+    "chipStyle": "Chip Style",
+    "chipStylePill": "Pill (with background)",
+    "chipStyleText": "Text Only"
   },
   "questionTypes": {
     "text": "Short text",

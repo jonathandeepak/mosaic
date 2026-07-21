@@ -735,15 +735,30 @@ export function EventPageEditor({ initialEvent }) {
           onCheckedChange={(checked) => patchContent('hero', { show_chip: !!checked })}
         />
         {hero.show_chip !== false && (
+          <div className={styles.colorField}>
+            <span className="field-label">{t('chipStyle')}</span>
+            <NativeSelect
+              value={hero.chip_style ?? 'pill'}
+              onChange={(e) => patchContent('hero', { chip_style: e.target.value })}
+              aria-label={t('chipStyle')}
+            >
+              <option value="pill">{t('chipStylePill')}</option>
+              <option value="text">{t('chipStyleText')}</option>
+            </NativeSelect>
+          </div>
+        )}
+        {hero.show_chip !== false && (
           <div className={styles.colorPair}>
-            <ColorField
-              label={t('chipBackground')}
-              addLabel={t('addColor')}
-              resetLabel={t('resetColor')}
-              value={hero.chip_bg}
-              defaultValue={isDark ? '#000000' : '#ffffff'}
-              onChange={(c) => patchContent('hero', { chip_bg: c ?? undefined })}
-            />
+            {hero.chip_style !== 'text' && (
+              <ColorField
+                label={t('chipBackground')}
+                addLabel={t('addColor')}
+                resetLabel={t('resetColor')}
+                value={hero.chip_bg}
+                defaultValue={isDark ? '#000000' : '#ffffff'}
+                onChange={(c) => patchContent('hero', { chip_bg: c ?? undefined })}
+              />
+            )}
             <ColorField
               label={t('chipTextColor')}
               addLabel={t('addColor')}
@@ -754,7 +769,7 @@ export function EventPageEditor({ initialEvent }) {
             />
           </div>
         )}
-        {hero.show_chip !== false && hero.chip_bg && (
+        {hero.show_chip !== false && hero.chip_style !== 'text' && hero.chip_bg && (
           <div className={styles.colorField}>
             <span className="field-label">
               {t('chipOpacity')}: {hero.chip_bg_opacity ?? 100}%

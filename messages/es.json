@@ -336,7 +336,10 @@
     "testimonialLayout": "Diseño",
     "testimonialLayoutCards": "Tarjetas",
     "testimonialLayoutQuote": "Cita minimalista (centrada)",
-    "testimonialHeadingHelp": "El título es opcional: déjalo vacío para mostrar solo las citas."
+    "testimonialHeadingHelp": "El título es opcional: déjalo vacío para mostrar solo las citas.",
+    "chipStyle": "Estilo de la etiqueta",
+    "chipStylePill": "Píldora (con fondo)",
+    "chipStyleText": "Solo texto"
   },
   "questionTypes": {
     "text": "Texto corto",

@@ -336,7 +336,10 @@
     "testimonialLayout": "Disposition",
     "testimonialLayoutCards": "Cartes",
     "testimonialLayoutQuote": "Citation minimaliste (centrée)",
-    "testimonialHeadingHelp": "Le titre est facultatif — laissez-le vide pour n'afficher que les citations."
+    "testimonialHeadingHelp": "Le titre est facultatif — laissez-le vide pour n'afficher que les citations.",
+    "chipStyle": "Style de l'étiquette",
+    "chipStylePill": "Pastille (avec fond)",
+    "chipStyleText": "Texte seul"
   },
   "questionTypes": {
     "text": "Texte court",
