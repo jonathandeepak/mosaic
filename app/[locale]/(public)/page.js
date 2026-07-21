@@ -6,7 +6,6 @@ import { formatEventDateRange } from '@/lib/dates'
 import { eventPhase, EVENT_PHASE_TONES } from '@/lib/event-phase'
 import { Badge, MosaicMark } from '@/components/ui'
 import { getDateFormatPrefs } from '@/lib/date-format-server'
-import { MosaicMark } from '@/components/ui'
 import styles from './home.module.css'
 
 export const revalidate = 300
