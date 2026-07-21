@@ -8,7 +8,7 @@ import { formatEventDateRange } from '@/lib/dates'
 import { Input } from '@/components/ui'
 import styles from './home.module.css'
 
-export function HomeEventsList({ events }) {
+export function HomeEventsList({ events, dateFmt }) {
   const t = useTranslations('home')
   const locale = useLocale()
   const [search, setSearch] = useState('')
@@ -48,7 +48,7 @@ export function HomeEventsList({ events }) {
                   <div className={styles.cardBody}>
                     <h3>{lt(event.name, locale, event.default_locale)}</h3>
                     <p className={styles.cardMeta}>
-                      {formatEventDateRange(event.starts_at, event.ends_at, event.timezone, locale)}
+                      {formatEventDateRange(event.starts_at, event.ends_at, event.timezone, locale, dateFmt)}
                     </p>
                     {lt(event.location, locale, event.default_locale) && (
                       <p className={styles.cardMeta}>
