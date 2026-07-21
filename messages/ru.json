@@ -56,7 +56,10 @@
     "speakersKicker": "Спикеры",
     "speakersDefault": "Главные спикеры",
     "agendaDefault": "Программа",
-    "ticketsDefault": "Выберите свой доступ"
+    "ticketsDefault": "Выберите свой доступ",
+    "countdownDays": "Дней",
+    "countdownHours": "Часов",
+    "countdownMin": "Мин"
   },
   "wizard": {
     "title": "Регистрация на {event}",
@@ -287,7 +290,11 @@
     "descriptionColor": "Цвет описания",
     "chipOpacity": "Прозрачность плашки",
     "applyToAllTitles": "Применить этот цвет ко всем заголовкам разделов",
-    "sectionBackground": "Цвет фона раздела"
+    "sectionBackground": "Цвет фона раздела",
+    "heroExtras": "Дополнения шапки",
+    "showCountdown": "Показывать обратный отсчёт",
+    "countdownHelp": "Отсчёт до начала события, рядом с кнопкой.",
+    "heroTexture": "Диагональная текстура"
   },
   "questionTypes": {
     "text": "Короткий текст",

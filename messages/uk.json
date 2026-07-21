@@ -56,7 +56,10 @@
     "speakersKicker": "Спікери",
     "speakersDefault": "Головні спікери",
     "agendaDefault": "Програма",
-    "ticketsDefault": "Оберіть свій доступ"
+    "ticketsDefault": "Оберіть свій доступ",
+    "countdownDays": "Днів",
+    "countdownHours": "Годин",
+    "countdownMin": "Хв"
   },
   "wizard": {
     "title": "Реєстрація на {event}",
@@ -287,7 +290,11 @@
     "descriptionColor": "Колір опису",
     "chipOpacity": "Прозорість плашки",
     "applyToAllTitles": "Застосувати цей колір до всіх заголовків розділів",
-    "sectionBackground": "Колір тла розділу"
+    "sectionBackground": "Колір тла розділу",
+    "heroExtras": "Додатки шапки",
+    "showCountdown": "Показувати зворотний відлік",
+    "countdownHelp": "Відлік до початку події, поруч із кнопкою.",
+    "heroTexture": "Діагональна текстура"
   },
   "questionTypes": {
     "text": "Короткий текст",

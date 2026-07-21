@@ -652,6 +652,19 @@ export function EventPageEditor({ initialEvent }) {
             />
           </div>
         )}
+
+        <h4 className={styles.panelSubhead}>{t('heroExtras')}</h4>
+        <CheckboxRow
+          label={t('showCountdown')}
+          checked={hero.show_countdown !== false}
+          onCheckedChange={(checked) => patchContent('hero', { show_countdown: !!checked })}
+        />
+        <p className="field-help">{t('countdownHelp')}</p>
+        <CheckboxRow
+          label={t('heroTexture')}
+          checked={!!hero.texture}
+          onCheckedChange={(checked) => patchContent('hero', { texture: !!checked })}
+        />
       </>
     )
   }

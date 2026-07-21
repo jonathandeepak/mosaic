@@ -56,7 +56,10 @@
     "speakersKicker": "Ponentes",
     "speakersDefault": "Ponentes principales",
     "agendaDefault": "Agenda",
-    "ticketsDefault": "Elige tu acceso"
+    "ticketsDefault": "Elige tu acceso",
+    "countdownDays": "Días",
+    "countdownHours": "Horas",
+    "countdownMin": "Min"
   },
   "wizard": {
     "title": "Inscripción a {event}",
@@ -287,7 +290,11 @@
     "descriptionColor": "Color de la descripción",
     "chipOpacity": "Opacidad de la etiqueta",
     "applyToAllTitles": "Aplicar este color a todos los títulos de sección",
-    "sectionBackground": "Color de fondo de la sección"
+    "sectionBackground": "Color de fondo de la sección",
+    "heroExtras": "Extras del encabezado",
+    "showCountdown": "Mostrar cuenta regresiva",
+    "countdownHelp": "Cuenta regresiva hasta el inicio del evento, junto al botón.",
+    "heroTexture": "Textura diagonal"
   },
   "questionTypes": {
     "text": "Texto corto",

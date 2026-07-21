@@ -5,6 +5,7 @@ import { lt } from '@/lib/i18n/locales'
 import { formatEventDate, formatEventDateRange } from '@/lib/dates'
 import { eventMediaUrl } from '@/lib/storage'
 import { StatIcon } from './stat-icons'
+import { Countdown } from './Countdown'
 import styles from './event-page-view.module.css'
 
 // Style options shared with the console editor.
@@ -237,6 +238,7 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
         {coverUrl && heroTint && (
           <div className={styles.heroTint} style={{ background: heroTint }} aria-hidden="true" />
         )}
+        {hero.texture && <div className={styles.heroPattern} aria-hidden="true" />}
         <div
           className={`container ${styles.heroInner}`}
           data-align={theme.title_align || undefined}
@@ -280,6 +282,17 @@ export function EventPageView({ event, locale, registerHref, editable = false, o
               <a className={`btn ${styles.heroGhostBtn}`} href="#agenda">
                 {t('viewAgenda')}
               </a>
+            )}
+            {hero.show_countdown !== false && !closed && (
+              <Countdown
+                target={event.starts_at}
+                className={styles.countdown}
+                labels={{
+                  days: t('countdownDays'),
+                  hours: t('countdownHours'),
+                  min: t('countdownMin'),
+                }}
+              />
             )}
           </div>
         </div>
