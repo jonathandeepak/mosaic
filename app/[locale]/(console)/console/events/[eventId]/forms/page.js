@@ -51,8 +51,10 @@ export default async function FormsPage({ params }) {
                       </Badge>
                     ) : (
                       <span
-                        title={t('defaultFormTip')}
-                        style={{ cursor: 'help', display: 'inline-flex', gap: '0.3rem', alignItems: 'center' }}
+                        className="tip"
+                        data-tip={t('defaultFormTip')}
+                        tabIndex={0}
+                        style={{ display: 'inline-flex', gap: '0.3rem', alignItems: 'center' }}
                       >
                         <Badge>{t('formModeDefault')}</Badge>
                         <span aria-hidden="true" style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-xs)' }}>ⓘ</span>

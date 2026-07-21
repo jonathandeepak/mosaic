@@ -290,7 +290,17 @@
     "createForm": "Create form",
     "formModeDefault": "Default",
     "defaultFormTip": "This form is used when no matching single or family response form exists.",
-    "eventPublished": "Event published!"
+    "eventPublished": "Event published!",
+    "visibility": "Visibility",
+    "visibilityHelp": "Unlisted events don't appear on the public list — only people with the link can open them.",
+    "visibilityPublic": "Public — shown on the home page",
+    "visibilityUnlisted": "Unlisted — link only",
+    "deleteEvent": "Delete",
+    "deleting": "Deleting…",
+    "deleteEventTitle": "Delete “{name}”?",
+    "deleteEventDraftWarning": "This event was never published. It will be permanently deleted along with its forms, participant types, and settings. This cannot be undone.",
+    "deleteEventPublishedWarning": "This event has been published before, so it will be hidden from everyone — including you — but kept in the database as archive history.",
+    "deleteEventError": "Could not delete the event. Please try again."
   },
   "questionTypes": {
     "text": "Short text",
@@ -340,5 +350,12 @@
     "address_state": "State / Province",
     "address_postalCode": "Postal code",
     "address_country": "Country"
+  },
+  "eventPhase": {
+    "registrationNotOpen": "Registration opens soon",
+    "registrationOpen": "Registration open",
+    "registrationClosed": "Registration closed",
+    "inProgress": "Happening now",
+    "ended": "Event ended"
   }
 }

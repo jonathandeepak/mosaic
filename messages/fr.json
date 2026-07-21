@@ -290,7 +290,17 @@
     "createForm": "Créer le formulaire",
     "formModeDefault": "Par défaut",
     "defaultFormTip": "Ce formulaire est utilisé lorsqu'aucun formulaire de réponse individuelle ou familiale ne s'applique.",
-    "eventPublished": "Événement publié !"
+    "eventPublished": "Événement publié !",
+    "visibility": "Visibilité",
+    "visibilityHelp": "Les événements non répertoriés n'apparaissent pas dans la liste publique — seules les personnes disposant du lien peuvent les ouvrir.",
+    "visibilityPublic": "Public — affiché sur la page d'accueil",
+    "visibilityUnlisted": "Non répertorié — lien uniquement",
+    "deleteEvent": "Supprimer",
+    "deleting": "Suppression…",
+    "deleteEventTitle": "Supprimer « {name} » ?",
+    "deleteEventDraftWarning": "Cet événement n'a jamais été publié. Il sera définitivement supprimé, ainsi que ses formulaires, types de participants et paramètres. Cette action est irréversible.",
+    "deleteEventPublishedWarning": "Cet événement a déjà été publié : il sera masqué pour tout le monde — y compris vous — mais conservé dans la base de données comme historique.",
+    "deleteEventError": "Impossible de supprimer l'événement. Veuillez réessayer."
   },
   "questionTypes": {
     "text": "Texte court",
@@ -340,5 +350,12 @@
     "address_state": "État / Province",
     "address_postalCode": "Code postal",
     "address_country": "Pays"
+  },
+  "eventPhase": {
+    "registrationNotOpen": "Ouverture des inscriptions bientôt",
+    "registrationOpen": "Inscriptions ouvertes",
+    "registrationClosed": "Inscriptions closes",
+    "inProgress": "En cours",
+    "ended": "Événement terminé"
   }
 }

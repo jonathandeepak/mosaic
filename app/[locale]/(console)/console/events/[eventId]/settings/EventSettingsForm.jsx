@@ -39,6 +39,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   const [regOpens, setRegOpens] = useState(toLocalInput(event.registration_opens_at, event.timezone))
   const [regCloses, setRegCloses] = useState(toLocalInput(event.registration_closes_at, event.timezone))
   const [capacity, setCapacity] = useState(event.capacity ?? '')
+  const [visibility, setVisibility] = useState(event.visibility ?? 'public')
   const [contact, setContact] = useState(event.contact ?? {})
   const [types, setTypes] = useState(initialTypes)
   const [typePickerOpen, setTypePickerOpen] = useState(false)
@@ -62,6 +63,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
         registration_opens_at: fromLocalInput(regOpens, timezone),
         registration_closes_at: fromLocalInput(regCloses, timezone),
         capacity: capacity === '' ? null : Number(capacity),
+        visibility,
         contact,
         supported_locales: LOCALES.filter((l) => (name[l] ?? '').trim() !== ''),
       })
@@ -191,6 +193,14 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
           <Field label={t('capacity')} help={t('capacityHelp')}>
             {({ id }) => (
               <Input id={id} type="number" min="1" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            )}
+          </Field>
+          <Field label={t('visibility')} help={t('visibilityHelp')}>
+            {({ id }) => (
+              <NativeSelect id={id} value={visibility} onChange={(e) => setVisibility(e.target.value)}>
+                <option value="public">{t('visibilityPublic')}</option>
+                <option value="unlisted">{t('visibilityUnlisted')}</option>
+              </NativeSelect>
             )}
           </Field>
         </div>

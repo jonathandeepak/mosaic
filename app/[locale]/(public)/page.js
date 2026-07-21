@@ -3,7 +3,8 @@ import { Link } from '@/lib/i18n/navigation'
 import { getSupabaseAnonClient } from '@/lib/supabase/server'
 import { lt } from '@/lib/i18n/locales'
 import { formatEventDateRange } from '@/lib/dates'
-import { MosaicMark } from '@/components/ui'
+import { eventPhase, EVENT_PHASE_TONES } from '@/lib/event-phase'
+import { Badge, MosaicMark } from '@/components/ui'
 import styles from './home.module.css'
 
 export const revalidate = 300
@@ -16,8 +17,9 @@ export default async function HomePage({ params }) {
   const supabase = getSupabaseAnonClient()
   const { data: events } = await supabase
     .from('events')
-    .select('id, slug, name, description, location, timezone, starts_at, ends_at, cover_image_path, default_locale')
+    .select('id, slug, name, description, location, timezone, starts_at, ends_at, cover_image_path, default_locale, registration_opens_at, registration_closes_at')
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .gte('ends_at', new Date().toISOString())
     .order('starts_at', { ascending: true })
 
@@ -41,12 +43,17 @@ export default async function HomePage({ params }) {
           </p>
         ) : (
           <ul className={styles.grid}>
-            {events.map((event) => (
+            {events.map((event) => {
+              const phase = eventPhase(event)
+              return (
               <li key={event.id}>
                 <Link href={`/events/${event.slug}`} className={styles.cardLink}>
                   <article className="card">
                     <div className={styles.cardBody}>
                       <h3>{lt(event.name, locale, event.default_locale)}</h3>
+                      <p style={{ marginBlock: '0.2rem 0.4rem' }}>
+                        <Badge tone={EVENT_PHASE_TONES[phase]}>{t(`eventPhase.${phase}`)}</Badge>
+                      </p>
                       <p className={styles.cardMeta}>
                         {formatEventDateRange(event.starts_at, event.ends_at, event.timezone, locale)}
                       </p>
@@ -59,7 +66,7 @@ export default async function HomePage({ params }) {
                   </article>
                 </Link>
               </li>
-            ))}
+            )})}
           </ul>
         )}
       </section>
