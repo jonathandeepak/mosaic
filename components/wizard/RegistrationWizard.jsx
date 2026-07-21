@@ -5,28 +5,31 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/navigation'
 import { lt } from '@/lib/i18n/locales'
 import { validateParticipantAnswers } from '@/lib/form-engine/validate'
+import { extractIdentity } from '@/lib/form-engine/identity'
 import { FormRenderer } from '@/components/form-runtime/FormRenderer'
-import { Button, Field, Input, Badge } from '@/components/ui'
+import { Button, Badge, RadioGroup, RadioRow } from '@/components/ui'
 import styles from './wizard.module.css'
 
 /**
  * Group registration wizard.
- * Steps: counts → one pass per participant → review → done.
- * Draft state persists to localStorage per event so long family
- * registrations survive a reload.
+ * Steps: mode (single/family) → single-type or counts → one pass per
+ * participant → review → done. Draft state persists to localStorage per
+ * event so long family registrations survive a reload.
  *
  * Props: event row, participantTypes (with joined form + current version
- * definition), userId.
+ * definition — null when the type relies on a mode form), modeForms
+ * ({ single?, family? } definitions that override per-type forms), userId.
  */
-export function RegistrationWizard({ event, participantTypes, userId }) {
+export function RegistrationWizard({ event, participantTypes, modeForms = {}, userId }) {
   const t = useTranslations('wizard')
   const tCommon = useTranslations('common')
-  const tv = useTranslations('validation')
   const tMyRegs = useTranslations('myRegs')
   const locale = useLocale()
   const storageKey = `mosaic-draft-${event.slug}`
 
-  const [step, setStep] = useState('counts') // counts | person-N | review | done
+  const [step, setStep] = useState('mode') // mode | single-type | counts | person | review | done
+  const [mode, setMode] = useState(null) // 'single' | 'family'
+  const [singleTypeKey, setSingleTypeKey] = useState(null)
   const [counts, setCounts] = useState(() =>
     Object.fromEntries(participantTypes.map((pt) => [pt.key, 0]))
   )
@@ -42,23 +45,48 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
     [participantTypes]
   )
 
-  // Restore draft once on mount.
+  // The form a person fills: the mode-specific form when the organizer made
+  // one, otherwise the participant type's own assigned form.
+  function definitionFor(pt, forMode = mode) {
+    return (forMode ? modeForms?.[forMode] : null) ?? pt.definition ?? { questions: [] }
+  }
+
+  // Types that can actually be registered under a mode: a mode form covers
+  // every type; without one a type needs its own published form.
+  function typesFor(forMode) {
+    return modeForms?.[forMode]
+      ? participantTypes
+      : participantTypes.filter((pt) => pt.definition)
+  }
+
+  // Restore draft once on mount — but only when it still matches the event's
+  // CURRENT participant types. A draft saved before an organizer removed a
+  // type (or unpublished its form) would otherwise crash every render.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey)
-      if (raw) {
-        const draft = JSON.parse(raw)
-        if (draft.people?.length) {
-          setCounts(draft.counts ?? {})
-          setPeople(draft.people)
-          setStep(draft.step ?? 'counts')
-          setPersonIndex(draft.personIndex ?? 0)
-          setRestored(true)
-        }
+      if (!raw) return
+      const draft = JSON.parse(raw)
+      const validTypes = new Set(participantTypes.map((pt) => pt.key))
+      const usable =
+        draft.people?.length > 0 &&
+        draft.people.every((p) => p && validTypes.has(p.participantTypeKey)) &&
+        Object.keys(draft.counts ?? {}).every((k) => validTypes.has(k))
+      if (!usable) {
+        localStorage.removeItem(storageKey)
+        return
       }
+      setCounts(draft.counts ?? {})
+      setPeople(draft.people)
+      setMode(draft.mode === 'single' || draft.mode === 'family' ? draft.mode : null)
+      setSingleTypeKey(validTypes.has(draft.singleTypeKey) ? draft.singleTypeKey : null)
+      setStep(draft.step ?? 'counts')
+      setPersonIndex(Math.min(draft.personIndex ?? 0, draft.people.length - 1))
+      setRestored(true)
     } catch {
       // corrupted draft — start fresh
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey])
 
   // Persist draft on every change (until submitted).
@@ -70,53 +98,92 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
     if (people.length > 0) {
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ counts, people, step, personIndex })
+        JSON.stringify({ counts, people, step, personIndex, mode, singleTypeKey })
       )
     }
-  }, [counts, people, step, personIndex, storageKey])
+  }, [counts, people, step, personIndex, mode, singleTypeKey, storageKey])
 
-  function startForms() {
-    const list = []
-    for (const pt of participantTypes) {
-      const n = counts[pt.key] ?? 0
-      for (let i = 0; i < n; i++) {
-        list.push({
-          participantTypeKey: pt.key,
-          firstName: '',
-          lastName: '',
-          email: '',
-          answers: {},
-        })
-      }
-    }
-    if (list.length === 0) {
-      setErrors({ _counts: t('noTypesSelected') })
+  function chooseMode() {
+    if (!mode) {
+      setErrors({ _mode: t('noModeSelected') })
       return
     }
-    // Keep already-entered people when counts didn't change.
-    setPeople((prev) =>
-      list.map((slot, i) =>
-        prev[i]?.participantTypeKey === slot.participantTypeKey ? prev[i] : slot
-      )
-    )
+    setErrors({})
+    setStep(mode === 'single' ? 'single-type' : 'counts')
+  }
+
+  function startSingle() {
+    if (!singleTypeKey || !typeByKey.has(singleTypeKey)) {
+      setErrors({ _singleType: t('noTypesSelected') })
+      return
+    }
+    // Keep an already-entered person of the same type on back-and-forth.
+    setPeople((prev) => {
+      const existing = prev.find((p) => p.participantTypeKey === singleTypeKey)
+      return [existing ?? { participantTypeKey: singleTypeKey, answers: {} }]
+    })
     setErrors({})
     setPersonIndex(0)
     setStep('person')
   }
 
-  function updatePerson(index, patch) {
-    setPeople((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)))
+  function startForms() {
+    const familyTypes = typesFor('family')
+    const total = familyTypes.reduce((sum, pt) => sum + (counts[pt.key] ?? 0), 0)
+    if (total === 0) {
+      setErrors({ _counts: t('noTypesSelected') })
+      return
+    }
+    // Preserve already-entered people PER TYPE: changing the count of one
+    // type must never discard or shuffle another type's entries (positional
+    // matching lost data when an earlier type's count changed).
+    setPeople((prev) => {
+      const byType = new Map()
+      for (const person of prev) {
+        const bucket = byType.get(person.participantTypeKey) ?? []
+        bucket.push(person)
+        byType.set(person.participantTypeKey, bucket)
+      }
+      const list = []
+      for (const pt of familyTypes) {
+        const existing = byType.get(pt.key) ?? []
+        const n = counts[pt.key] ?? 0
+        for (let i = 0; i < n; i++) {
+          list.push(existing[i] ?? { participantTypeKey: pt.key, answers: {} })
+        }
+      }
+      return list
+    })
+    setErrors({})
+    setPersonIndex(0)
+    setStep('person')
+  }
+
+  // Answer updates must merge against the LATEST state: async callbacks
+  // (file uploads finishing) would otherwise overwrite answers typed while
+  // they were in flight with a stale snapshot.
+  function setAnswer(index, questionId, value) {
+    setPeople((prev) =>
+      prev.map((p, i) =>
+        i === index ? { ...p, answers: { ...p.answers, [questionId]: value } } : p
+      )
+    )
   }
 
   function validatePerson(index) {
     const p = people[index]
     const pt = typeByKey.get(p.participantTypeKey)
-    const res = validateParticipantAnswers(pt.definition, pt.key, p.answers)
-    const personErrors = { ...res.errors }
-    if (!p.firstName.trim()) personErrors._firstName = 'required'
-    if (!p.lastName.trim()) personErrors._lastName = 'required'
-    setErrors(personErrors)
-    return Object.keys(personErrors).length === 0
+    const res = validateParticipantAnswers(definitionFor(pt), pt.key, p.answers)
+    setErrors(res.errors)
+    return Object.keys(res.errors).length === 0
+  }
+
+  // Name/email are ordinary questions now; a person's display name comes
+  // from their answers (blank when the organizer removed the name question).
+  function displayName(p) {
+    const pt = typeByKey.get(p.participantTypeKey)
+    const { firstName, lastName } = extractIdentity(definitionFor(pt), pt.key, p.answers)
+    return `${firstName} ${lastName}`.trim()
   }
 
   function nextPerson() {
@@ -137,7 +204,7 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
     } else if (personIndex > 0) {
       setPersonIndex(personIndex - 1)
     } else {
-      setStep('counts')
+      setStep(mode === 'single' ? 'single-type' : 'counts')
     }
   }
 
@@ -150,6 +217,7 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
         body: JSON.stringify({
           eventId: event.id,
           locale,
+          registrationMode: mode,
           participants: people,
         }),
       })
@@ -171,9 +239,11 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
         <h2 className="page-title">{t('successTitle')}</h2>
         <p className={styles.muted}>{t('successBody')}</p>
         <ul className={styles.resultList}>
-          {result.participants.map((p) => (
+          {result.participants.map((p, i) => (
             <li key={p.participant_id}>
-              <span>{p.first_name}</span>
+              <span>
+                {p.first_name || t('participantOf', { index: i + 1, total: result.participants.length })}
+              </span>
               <Badge tone={p.status}>
                 {p.status === 'confirmed' ? t('statusConfirmed') : t('statusWaitlisted')}
               </Badge>
@@ -187,14 +257,103 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
     )
   }
 
+  if (step === 'mode') {
+    const singleAvailable = typesFor('single').length > 0
+    const familyAvailable = typesFor('family').length > 0
+    return (
+      <div className={styles.panel}>
+        <h2>{t('modeTitle')}</h2>
+        <p className={styles.muted}>{t('modeHelp')}</p>
+        {restored && <p className="alert alert-info">{t('draftRestored')}</p>}
+        <RadioGroup
+          value={mode ?? ''}
+          onValueChange={(v) => {
+            setMode(v)
+            setErrors({})
+          }}
+          aria-label={t('modeTitle')}
+        >
+          {singleAvailable && (
+            <RadioRow
+              id="reg-mode-single"
+              value="single"
+              checked={mode === 'single'}
+              label={
+                <span>
+                  <strong>{t('modeSingle')}</strong>
+                  <span className={styles.muted} style={{ display: 'block' }}>
+                    {t('modeSingleHelp')}
+                  </span>
+                </span>
+              }
+            />
+          )}
+          {familyAvailable && (
+            <RadioRow
+              id="reg-mode-family"
+              value="family"
+              checked={mode === 'family'}
+              label={
+                <span>
+                  <strong>{t('modeFamily')}</strong>
+                  <span className={styles.muted} style={{ display: 'block' }}>
+                    {t('modeFamilyHelp')}
+                  </span>
+                </span>
+              }
+            />
+          )}
+        </RadioGroup>
+        {errors._mode && <p className="alert alert-error">{errors._mode}</p>}
+        <div className={styles.nav}>
+          <span />
+          <Button onClick={chooseMode}>{tCommon('next')}</Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (step === 'single-type') {
+    return (
+      <div className={styles.panel}>
+        <h2>{t('singleTypeTitle')}</h2>
+        <p className={styles.muted}>{t('singleTypeHelp')}</p>
+        <RadioGroup
+          value={singleTypeKey ?? ''}
+          onValueChange={(v) => {
+            setSingleTypeKey(v)
+            setErrors({})
+          }}
+          aria-label={t('singleTypeTitle')}
+        >
+          {typesFor('single').map((pt) => (
+            <RadioRow
+              key={pt.key}
+              id={`single-type-${pt.key}`}
+              value={pt.key}
+              checked={singleTypeKey === pt.key}
+              label={lt(pt.name, locale, event.default_locale)}
+            />
+          ))}
+        </RadioGroup>
+        {errors._singleType && <p className="alert alert-error">{errors._singleType}</p>}
+        <div className={styles.nav}>
+          <Button variant="ghost" onClick={() => { setErrors({}); setStep('mode') }}>
+            {tCommon('back')}
+          </Button>
+          <Button onClick={startSingle}>{tCommon('next')}</Button>
+        </div>
+      </div>
+    )
+  }
+
   if (step === 'counts') {
     return (
       <div className={styles.panel}>
         <h2>{t('whoIsComing')}</h2>
         <p className={styles.muted}>{t('typeCountHelp')}</p>
-        {restored && <p className="alert alert-info">{t('draftRestored')}</p>}
         <div className={styles.countGrid}>
-          {participantTypes.map((pt) => (
+          {typesFor('family').map((pt) => (
             <div key={pt.key} className={styles.countRow}>
               <span className={styles.countLabel}>
                 {lt(pt.name, locale, event.default_locale)}
@@ -210,7 +369,9 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
         </div>
         {errors._counts && <p className="alert alert-error">{errors._counts}</p>}
         <div className={styles.nav}>
-          <span />
+          <Button variant="ghost" onClick={() => { setErrors({}); setStep('mode') }}>
+            {tCommon('back')}
+          </Button>
           <Button onClick={startForms}>{tCommon('next')}</Button>
         </div>
       </div>
@@ -226,51 +387,14 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
           {t('participantOf', { index: personIndex + 1, total: people.length })} ·{' '}
           {lt(pt.name, locale, event.default_locale)}
         </p>
-        <div className={styles.nameGrid}>
-          <Field label={t('firstName')} required error={errors._firstName ? tv('required') : undefined}>
-            {({ id, invalid }) => (
-              <Input
-                id={id}
-                value={p.firstName}
-                aria-invalid={invalid}
-                autoComplete="off"
-                onChange={(e) => updatePerson(personIndex, { firstName: e.target.value })}
-              />
-            )}
-          </Field>
-          <Field label={t('lastName')} required error={errors._lastName ? tv('required') : undefined}>
-            {({ id, invalid }) => (
-              <Input
-                id={id}
-                value={p.lastName}
-                aria-invalid={invalid}
-                autoComplete="off"
-                onChange={(e) => updatePerson(personIndex, { lastName: e.target.value })}
-              />
-            )}
-          </Field>
-          <Field label={`${t('email')} (${tCommon('optional')})`}>
-            {({ id }) => (
-              <Input
-                id={id}
-                type="email"
-                value={p.email}
-                autoComplete="off"
-                onChange={(e) => updatePerson(personIndex, { email: e.target.value })}
-              />
-            )}
-          </Field>
-        </div>
         <FormRenderer
-          definition={pt.definition}
+          definition={definitionFor(pt)}
           participantTypeKey={pt.key}
           locale={locale}
           defaultLocale={event.default_locale}
           answers={p.answers}
           errors={errors}
-          onChange={(qid, value) =>
-            updatePerson(personIndex, { answers: { ...p.answers, [qid]: value } })
-          }
+          onChange={(qid, value) => setAnswer(personIndex, qid, value)}
           uploadContext={{ eventId: event.id, userId }}
         />
         <div className={styles.nav}>
@@ -295,7 +419,8 @@ export function RegistrationWizard({ event, participantTypes, userId }) {
             <li key={i} className="card card-pad">
               <div className={styles.reviewHead}>
                 <strong>
-                  {p.firstName} {p.lastName}
+                  {displayName(p) ||
+                    t('participantOf', { index: i + 1, total: people.length })}
                 </strong>
                 <span className={styles.muted}>
                   {lt(pt.name, locale, event.default_locale)}

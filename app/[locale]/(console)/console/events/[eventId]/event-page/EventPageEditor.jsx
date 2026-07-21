@@ -1609,7 +1609,7 @@ export function EventPageEditor({ initialEvent }) {
           <Button onClick={() => setPanelSection(panelSection ? null : 'theme')}>
             {t('customize')}
           </Button>
-          <p className={styles.hint}>{t('previewHint')}</p>
+          <p className={styles.hint}>{t('pagePreviewHint')}</p>
           <div className={styles.localeSwitch} role="tablist" aria-label="Preview language">
             {LOCALES.map((l) => (
               <button

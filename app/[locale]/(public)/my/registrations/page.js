@@ -4,6 +4,7 @@ import { Link } from '@/lib/i18n/navigation'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { lt } from '@/lib/i18n/locales'
 import { formatEventDateRange } from '@/lib/dates'
+import { getDateFormatPrefs } from '@/lib/date-format-server'
 import { Badge } from '@/components/ui'
 import { CancelParticipantButton } from './CancelParticipantButton'
 import styles from './myregs.module.css'
@@ -14,6 +15,7 @@ export default async function MyRegistrationsPage({ params }) {
   const { locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations()
+  const dateFmt = await getDateFormatPrefs()
 
   const supabase = await getSupabaseServerClient()
   const {
@@ -52,11 +54,21 @@ export default async function MyRegistrationsPage({ params }) {
           {registrations.map((reg) => (
             <li key={reg.id} className="card card-pad">
               <div className={styles.regHead}>
-                <Link href={`/events/${reg.events.slug}`}>
-                  <strong>{lt(reg.events.name, locale, reg.events.default_locale)}</strong>
-                </Link>
+                {/* reg.events is null when the event was unpublished/archived:
+                    RLS hides it from the registrant while the registration
+                    itself stays visible. Keep the row (and cancellation)
+                    working instead of crashing the whole page. */}
+                {reg.events ? (
+                  <Link href={`/events/${reg.events.slug}`}>
+                    <strong>{lt(reg.events.name, locale, reg.events.default_locale)}</strong>
+                  </Link>
+                ) : (
+                  <strong>{t('myRegs.eventUnavailable')}</strong>
+                )}
                 <span className={styles.muted}>
-                  {formatEventDateRange(reg.events.starts_at, reg.events.ends_at, reg.events.timezone, locale)}
+                  {reg.events
+                    ? formatEventDateRange(reg.events.starts_at, reg.events.ends_at, reg.events.timezone, locale, dateFmt)
+                    : ''}
                 </span>
               </div>
               <ul className={styles.participants}>
@@ -66,7 +78,7 @@ export default async function MyRegistrationsPage({ params }) {
                       {p.first_name} {p.last_name}
                       <span className={styles.muted}>
                         {' · '}
-                        {lt(p.participant_types?.name, locale, reg.events.default_locale)}
+                        {lt(p.participant_types?.name, locale, reg.events?.default_locale)}
                       </span>
                     </span>
                     <span className={styles.rowActions}>

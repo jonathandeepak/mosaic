@@ -1,9 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Link } from '@/lib/i18n/navigation'
 import { getSupabaseAnonClient } from '@/lib/supabase/server'
-import { lt } from '@/lib/i18n/locales'
-import { formatEventDateRange } from '@/lib/dates'
+import { getDateFormatPrefs } from '@/lib/date-format-server'
 import { MosaicMark } from '@/components/ui'
+import { HomeEventsList } from './HomeEventsList'
 import styles from './home.module.css'
 
 export const revalidate = 300
@@ -12,12 +11,14 @@ export default async function HomePage({ params }) {
   const { locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations()
+  const dateFmt = await getDateFormatPrefs()
 
   const supabase = getSupabaseAnonClient()
   const { data: events } = await supabase
     .from('events')
-    .select('id, slug, name, description, location, timezone, starts_at, ends_at, cover_image_path, default_locale')
+    .select('id, slug, name, description, location, timezone, starts_at, ends_at, cover_image_path, default_locale, registration_opens_at, registration_closes_at')
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .gte('ends_at', new Date().toISOString())
     .order('starts_at', { ascending: true })
 
@@ -35,33 +36,7 @@ export default async function HomePage({ params }) {
 
       <section className="container" style={{ paddingBlock: 'var(--s-6)' }}>
         <h2 className="eyebrow">{t('home.upcomingEvents')}</h2>
-        {!events?.length ? (
-          <p style={{ marginTop: 'var(--s-4)', color: 'var(--ink-soft)' }}>
-            {t('home.noEvents')}
-          </p>
-        ) : (
-          <ul className={styles.grid}>
-            {events.map((event) => (
-              <li key={event.id}>
-                <Link href={`/events/${event.slug}`} className={styles.cardLink}>
-                  <article className="card">
-                    <div className={styles.cardBody}>
-                      <h3>{lt(event.name, locale, event.default_locale)}</h3>
-                      <p className={styles.cardMeta}>
-                        {formatEventDateRange(event.starts_at, event.ends_at, event.timezone, locale)}
-                      </p>
-                      {lt(event.location, locale, event.default_locale) && (
-                        <p className={styles.cardMeta}>
-                          {lt(event.location, locale, event.default_locale)}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <HomeEventsList events={events ?? []} dateFmt={dateFmt} />
       </section>
     </>
   )

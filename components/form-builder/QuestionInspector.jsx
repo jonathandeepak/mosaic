@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { LOCALES, LOCALE_NAMES, lt } from '@/lib/i18n/locales'
+import { ADDRESS_PART_KEYS, DEFAULT_ADDRESS_PARTS } from '@/lib/form-engine/address'
 import {
   Field,
   Input,
@@ -18,6 +19,8 @@ import styles from './builder.module.css'
 
 const OPERATORS = ['eq', 'neq', 'in', 'notIn', 'gt', 'gte', 'lt', 'lte', 'isEmpty', 'isNotEmpty', 'contains']
 const NO_VALUE_OPERATORS = ['isEmpty', 'isNotEmpty']
+// The rule engine requires an ARRAY value for these operators.
+const ARRAY_OPERATORS = ['in', 'notIn']
 
 export function QuestionInspector({
   question: q,
@@ -27,7 +30,17 @@ export function QuestionInspector({
   onChange,
 }) {
   const t = useTranslations('console')
+  const tr = useTranslations('runtime')
   const [editLocale, setEditLocale] = useState(defaultLocale)
+
+  function setAddressPart(key, patch) {
+    const current = q.addressParts ?? DEFAULT_ADDRESS_PARTS
+    const prev = current[key] ?? DEFAULT_ADDRESS_PARTS[key]
+    const next = { ...prev, ...patch }
+    // A disabled part can't be required.
+    if (!next.enabled) next.required = false
+    onChange({ addressParts: { ...current, [key]: next } })
+  }
 
   const myIndex = allQuestions.findIndex((x) => x.id === q.id)
   // Conditions may only reference earlier questions (backward references).
@@ -43,7 +56,18 @@ export function QuestionInspector({
   }
 
   function setRule(index, patch) {
-    const next = rules.map((r, i) => (i === index ? { ...r, ...patch } : r))
+    const next = rules.map((r, i) => {
+      if (i !== index) return r
+      const merged = { ...r, ...patch }
+      // Keep the value's shape in sync with the operator: in/notIn need
+      // arrays, everything else needs a scalar.
+      if (ARRAY_OPERATORS.includes(merged.operator) && !Array.isArray(merged.value)) {
+        merged.value = merged.value === '' || merged.value == null ? [] : [merged.value]
+      } else if (!ARRAY_OPERATORS.includes(merged.operator) && Array.isArray(merged.value)) {
+        merged.value = merged.value[0] ?? ''
+      }
+      return merged
+    })
     onChange({ visibleIf: { op: q.visibleIf?.op ?? 'and', rules: next } })
   }
 
@@ -109,6 +133,55 @@ export function QuestionInspector({
           />
           <span>{t('requiredField')}</span>
         </label>
+      )}
+
+      {/* Name format */}
+      {q.type === 'name' && (
+        <div className={styles.inspectorSection}>
+          <Field label={t('nameFormat')}>
+            {({ id }) => (
+              <NativeSelect
+                id={id}
+                value={q.nameFormat ?? 'first_last'}
+                onChange={(e) => onChange({ nameFormat: e.target.value })}
+              >
+                <option value="first_last">{t('nameFormatFirstLast')}</option>
+                <option value="full">{t('nameFormatFull')}</option>
+                <option value="first_middle_last">{t('nameFormatFirstMiddleLast')}</option>
+              </NativeSelect>
+            )}
+          </Field>
+        </div>
+      )}
+
+      {/* Address parts */}
+      {q.type === 'address' && (
+        <div className={styles.inspectorSection}>
+          <span className="field-label">{t('addressParts')}</span>
+          {ADDRESS_PART_KEYS.map((key) => {
+            const part = (q.addressParts ?? DEFAULT_ADDRESS_PARTS)[key] ?? DEFAULT_ADDRESS_PARTS[key]
+            return (
+              <div key={key} className={styles.typeCheck} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flex: 1 }}>
+                  <Checkbox
+                    checked={!!part.enabled}
+                    onCheckedChange={(c) => setAddressPart(key, { enabled: !!c })}
+                  />
+                  <span>{tr(`address_${key}`)}</span>
+                </label>
+                {part.enabled && (
+                  <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', color: 'var(--ink-soft)', fontSize: 'var(--text-sm)' }}>
+                    <Checkbox
+                      checked={!!part.required}
+                      onCheckedChange={(c) => setAddressPart(key, { required: !!c })}
+                    />
+                    <span>{t('requiredField')}</span>
+                  </label>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
 
       {/* Participant types */}
@@ -229,7 +302,41 @@ export function QuestionInspector({
                   ))}
                 </NativeSelect>
                 {!NO_VALUE_OPERATORS.includes(rule.operator) &&
-                  (refHasOptions ? (
+                  (ARRAY_OPERATORS.includes(rule.operator) ? (
+                    refHasOptions ? (
+                      <NativeSelect
+                        aria-label="Value"
+                        multiple
+                        size={Math.min(4, (refQ.options ?? []).length || 1)}
+                        value={Array.isArray(rule.value) ? rule.value : []}
+                        onChange={(e) =>
+                          setRule(i, {
+                            value: [...e.target.selectedOptions].map((o) => o.value),
+                          })
+                        }
+                      >
+                        {(refQ.options ?? []).map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {lt(o.label, editLocale, defaultLocale) || o.value}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    ) : (
+                      // Free-text lists: comma-separated, stored as an array.
+                      <Input
+                        aria-label="Value"
+                        value={Array.isArray(rule.value) ? rule.value.join(', ') : ''}
+                        onChange={(e) =>
+                          setRule(i, {
+                            value: e.target.value
+                              .split(',')
+                              .map((s) => s.trim())
+                              .filter(Boolean),
+                          })
+                        }
+                      />
+                    )
+                  ) : refHasOptions ? (
                     <NativeSelect
                       aria-label="Value"
                       value={rule.value ?? ''}

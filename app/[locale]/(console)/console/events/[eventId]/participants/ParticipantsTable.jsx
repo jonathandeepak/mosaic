@@ -2,21 +2,36 @@
 
 import { useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { lt } from '@/lib/i18n/locales'
+import { formatStructuredAnswer } from '@/lib/form-engine/format'
 import { Badge, Button, Field, Input, NativeSelect } from '@/components/ui'
+import { ParticipantDetail } from './ParticipantDetail'
 import styles from './participants.module.css'
 
 const PAGE_SIZE = 50
 const STATUSES = ['pending', 'confirmed', 'waitlisted', 'cancelled']
+const STATUS_TRANSITIONS = {
+  pending: ['confirmed', 'waitlisted', 'cancelled'],
+  confirmed: ['cancelled'],
+  waitlisted: ['confirmed', 'cancelled'],
+  cancelled: ['confirmed', 'waitlisted'],
+}
 
 /**
  * Filters compile straight to PostgREST operators on the JSONB answers
  * column (GIN-indexed), so filtering happens in the database, not the
  * browser. RLS restricts rows to events the viewer can see.
  */
-export function ParticipantsTable({ eventId, participantTypes, questions }) {
+export function ParticipantsTable({
+  eventId,
+  participantTypes,
+  questions,
+  definitionByVersion = {},
+  canEdit = false,
+  canChangeStatus = false,
+}) {
   const t = useTranslations()
   const locale = useLocale()
   const supabase = getSupabaseBrowserClient()
@@ -27,6 +42,8 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
   const [typeFilter, setTypeFilter] = useState('')
   const [answerFilters, setAnswerFilters] = useState({}) // questionId → value
   const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState(null) // participant row for the drawer
+  const [statusError, setStatusError] = useState('')
 
   const typeById = useMemo(
     () => new Map(participantTypes.map((pt) => [pt.id, pt])),
@@ -38,12 +55,12 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
   )
 
   const filters = { search, statusFilter, typeFilter, answerFilters, page }
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['participants', eventId, filters],
     queryFn: async () => {
       let q = supabase
         .from('participants')
-        .select('id, first_name, last_name, email, status, answers, created_at, participant_type_id', { count: 'exact' })
+        .select('id, first_name, last_name, email, status, answers, created_at, participant_type_id, form_version_id', { count: 'exact' })
         .eq('event_id', eventId)
         .order('created_at', { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
@@ -51,7 +68,10 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
       if (statusFilter) q = q.eq('status', statusFilter)
       if (typeFilter) q = q.eq('participant_type_id', typeFilter)
       if (search.trim()) {
-        const s = search.trim().replaceAll(',', ' ')
+        // .or() takes raw PostgREST syntax: commas separate clauses and
+        // parentheses group them, so both must be stripped from user input
+        // or a search like "Smith (guest)" breaks the whole query.
+        const s = search.trim().replace(/[(),]/g, ' ').replace(/\s+/g, ' ')
         q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,email.ilike.%${s}%`)
       }
       for (const [qid, value] of Object.entries(answerFilters)) {
@@ -72,11 +92,21 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
       if (error) throw error
       return { rows: data ?? [], count: count ?? 0 }
     },
-    keepPreviousData: true,
+    // v5 API — the old `keepPreviousData: true` option was removed and
+    // silently ignored, which made every filter/page change flash empty.
+    placeholderData: keepPreviousData,
   })
 
   async function changeStatus(participantId, status) {
-    await supabase.from('participants').update({ status }).eq('id', participantId)
+    setStatusError('')
+    const { error } = await supabase.rpc('transition_participant_status', {
+      p_participant_id: participantId,
+      p_new_status: status,
+    })
+    if (error) {
+      setStatusError(error.message)
+      return
+    }
     queryClient.invalidateQueries({ queryKey: ['participants', eventId] })
   }
 
@@ -139,6 +169,9 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
           {t('console.exportCsv')}
         </a>
       </div>
+      {statusError && (
+        <p className="alert alert-error" role="alert">{statusError}</p>
+      )}
 
       <div className="table-wrap">
         <table className="table">
@@ -156,14 +189,26 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
+            {error ? (
+              <tr>
+                <td colSpan={99}>
+                  <span className="alert alert-error" role="alert">
+                    {t('console.loadError')}
+                  </span>
+                </td>
+              </tr>
+            ) : isLoading ? (
               <tr><td colSpan={99}>{t('common.loading')}</td></tr>
             ) : rows.length === 0 ? (
               <tr><td colSpan={99}>{t('console.noParticipants')}</td></tr>
             ) : (
               rows.map((p) => (
                 <tr key={p.id}>
-                  <td>{p.first_name}</td>
+                  <td>
+                    <button className={styles.rowLink} onClick={() => setSelected(p)}>
+                      {p.first_name}
+                    </button>
+                  </td>
                   <td>{p.last_name}</td>
                   <td>{p.email}</td>
                   <td>{lt(typeById.get(p.participant_type_id)?.name, locale)}</td>
@@ -172,16 +217,24 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
                     <td key={q.id}>{formatAnswer(p.answers?.[q.id], q, locale)}</td>
                   ))}
                   <td>
-                    <NativeSelect
-                      value={p.status}
-                      aria-label={t('console.changeStatus')}
-                      style={{ width: 'auto', paddingBlock: '0.2rem' }}
-                      onChange={(e) => changeStatus(p.id, e.target.value)}
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>{t(`status.${s}`)}</option>
-                      ))}
-                    </NativeSelect>
+                    <div className={styles.rowActions}>
+                      <Button variant="ghost" size="sm" onClick={() => setSelected(p)}>
+                        {t('console.viewDetail')}
+                      </Button>
+                      {canChangeStatus && (
+                        <NativeSelect
+                          value={p.status}
+                          aria-label={t('console.changeStatus')}
+                          style={{ width: 'auto', paddingBlock: '0.2rem' }}
+                          onChange={(e) => changeStatus(p.id, e.target.value)}
+                        >
+                          <option value={p.status}>{t(`status.${p.status}`)}</option>
+                          {(STATUS_TRANSITIONS[p.status] ?? []).map((s) => (
+                            <option key={s} value={s}>{t(`status.${s}`)}</option>
+                          ))}
+                        </NativeSelect>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -201,12 +254,31 @@ export function ParticipantsTable({ eventId, participantTypes, questions }) {
           →
         </Button>
       </div>
+
+      {selected && (
+        <ParticipantDetail
+          participant={{
+            ...selected,
+            participant_type_key: typeById.get(selected.participant_type_id)?.key,
+          }}
+          typeName={typeById.get(selected.participant_type_id)?.name}
+          definition={definitionByVersion[selected.form_version_id] ?? { questions: [] }}
+          canEdit={canEdit}
+          onClose={() => setSelected(null)}
+          onSaved={() => {
+            setSelected(null)
+            queryClient.invalidateQueries({ queryKey: ['participants', eventId] })
+          }}
+        />
+      )}
     </div>
   )
 }
 
 function formatAnswer(value, question, locale) {
   if (value == null) return ''
+  const structured = formatStructuredAnswer(question, value)
+  if (structured !== null) return structured
   if (question.type === 'checkbox') return value ? '✓' : ''
   if (Array.isArray(value)) {
     return value
