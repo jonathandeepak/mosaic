@@ -1,6 +1,5 @@
 export { Button } from './Button'
 export { Field, Input, Textarea, NativeSelect } from './Field'
-export { DateInput, DateTimeInput } from './DateInput'
 export { Checkbox, CheckboxRow } from './Checkbox'
 export { RadioGroup, RadioRow } from './Radio'
 export { Dialog } from './Dialog'
@@ -8,4 +7,3 @@ export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'
 export { Badge } from './Badge'
 export { ConfettiBurst } from './ConfettiBurst'
 export { MosaicMark } from './MosaicMark'
-

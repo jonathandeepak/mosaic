@@ -250,13 +250,13 @@ export function QuestionField({
       return (
         <Field {...common}>
           {({ id, describedBy, invalid }) => (
-            <DateInput
+            <Input
               id={id}
+              type="date"
               value={value ?? ''}
               aria-describedby={describedBy}
               aria-invalid={invalid}
-              onChange={(val) => onChange(val)}
-              preview={preview}
+              onChange={(e) => onChange(e.target.value)}
             />
           )}
         </Field>

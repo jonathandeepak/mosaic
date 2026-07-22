@@ -10,7 +10,6 @@ import { PARTICIPANT_TYPE_PRESETS, uniqueTypeKey } from '@/lib/participant-type-
 import {
   Button,
   ConfettiBurst,
-  DateTimeInput,
   Dialog,
   Field,
   Input,
@@ -100,8 +99,8 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
       setSaveState('error')
       return
     }
-    setSavedSnap(snapshot(slugValue))
     setSaveState('saved')
+    setSavedSnap(snapshot(slugValue))
     router.refresh()
   }
 
@@ -148,9 +147,8 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   }
 
   return (
-    <form className={styles.settingsForm} onSubmit={(e) => { e.preventDefault(); requestSave() }}>
+    <div className={styles.wrap}>
       <section className="card card-pad">
-        <h2 style={{ marginBottom: 'var(--s-2)' }}>{t('eventBasics')}</h2>
         {/* Localized content, one tab per locale */}
         <Tabs defaultValue={event.default_locale}>
           <TabsList>
@@ -162,7 +160,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
           </TabsList>
           {LOCALES.map((l) => (
             <TabsContent key={l} value={l}>
-              <div className={styles.transGroup} style={{ marginTop: 'var(--s-4)' }}>
+              <div className={styles.grid} style={{ marginTop: 'var(--s-4)' }}>
                 <Field label={`${t('eventName')} (${l})`} required={l === event.default_locale}>
                   {({ id }) => (
                     <Input
@@ -176,7 +174,6 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
                   {({ id }) => (
                     <Textarea
                       id={id}
-                      rows={3}
                       value={description[l] ?? ''}
                       onChange={(e) => setDescription({ ...description, [l]: e.target.value })}
                     />
@@ -213,22 +210,22 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
           </Field>
           <Field label={t('startsAt')}>
             {({ id }) => (
-              <DateTimeInput id={id} value={startsAt} onChange={(val) => setStartsAt(val)} />
+              <Input id={id} type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
             )}
           </Field>
           <Field label={t('endsAt')}>
             {({ id }) => (
-              <DateTimeInput id={id} value={endsAt} onChange={(val) => setEndsAt(val)} />
+              <Input id={id} type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
             )}
           </Field>
           <Field label={t('regOpens')}>
             {({ id }) => (
-              <DateTimeInput id={id} value={regOpens} onChange={(val) => setRegOpens(val)} />
+              <Input id={id} type="datetime-local" value={regOpens} onChange={(e) => setRegOpens(e.target.value)} />
             )}
           </Field>
           <Field label={t('regCloses')}>
             {({ id }) => (
-              <DateTimeInput id={id} value={regCloses} onChange={(val) => setRegCloses(val)} />
+              <Input id={id} type="datetime-local" value={regCloses} onChange={(e) => setRegCloses(e.target.value)} />
             )}
           </Field>
           <Field label={t('capacity')} help={t('capacityHelp')}>
