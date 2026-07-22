@@ -834,49 +834,6 @@ export function EventPageEditor({ initialEvent }) {
           </NativeSelect>
         </div>
 
-        {/* ---- Hero background (title area) ---- */}
-        <h4 className={styles.panelSubhead}>{t('heroTitleStyle')}</h4>
-        <ColorField
-          label={t('heroBackground')}
-          addLabel={t('addColor')}
-          resetLabel={t('resetColor')}
-          value={theme.hero_bg}
-          defaultValue={isDark ? '#000000' : '#ffffff'}
-          onChange={(c) => setTheme({ hero_bg: c ?? undefined })}
-        />
-        {theme.hero_bg && event.cover_image_path && (
-          <div className={styles.colorField}>
-            <span className="field-label">
-              {t('heroOpacity')}: {theme.hero_opacity ?? 100}%
-            </span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={theme.hero_opacity ?? 100}
-              onChange={(e) => setTheme({ hero_opacity: Number(e.target.value) })}
-            />
-            <p className="field-help">{t('heroOpacityHelp')}</p>
-          </div>
-        )}
-        <StyleSelects
-          t={t}
-          style={{ size: theme.title_size, font: theme.title_font }}
-          onChange={(s) => setTheme({ title_size: s.size, title_font: s.font })}
-        />
-        <div className={styles.colorField}>
-          <span className="field-label">{t('titleAlign')}</span>
-          <NativeSelect
-            value={theme.title_align ?? 'left'}
-            onChange={(e) => setTheme({ title_align: e.target.value })}
-          >
-            <option value="left">{t('alignLeft')}</option>
-            <option value="center">{t('alignCenter')}</option>
-            <option value="right">{t('alignRight')}</option>
-          </NativeSelect>
-        </div>
-
         {/* ---- Identity: logo + favicon ---- */}
         <h4 className={styles.panelSubhead}>{t('groupIdentity')}</h4>
         <input ref={logoInputRef} type="file" accept="image/*" hidden onChange={onLogoFile} />
@@ -1023,6 +980,8 @@ export function EventPageEditor({ initialEvent }) {
 
   function renderHero() {
     const hero = content.hero ?? {}
+    const theme = content.theme ?? {}
+    const setTheme = (patch) => patchContent('theme', patch)
     return (
       <>
         <div className={styles.colorField}>
@@ -1068,6 +1027,49 @@ export function EventPageEditor({ initialEvent }) {
           />
         )}
         <p className="field-help">{t('coverHelp')}</p>
+
+        {/* ---- Hero title styling (background, opacity, title size/font/align) ---- */}
+        <h4 className={styles.panelSubhead}>{t('heroTitleStyle')}</h4>
+        <ColorField
+          label={t('heroBackground')}
+          addLabel={t('addColor')}
+          resetLabel={t('resetColor')}
+          value={theme.hero_bg}
+          defaultValue={isDark ? '#000000' : '#ffffff'}
+          onChange={(c) => setTheme({ hero_bg: c ?? undefined })}
+        />
+        {theme.hero_bg && event.cover_image_path && (
+          <div className={styles.colorField}>
+            <span className="field-label">
+              {t('heroOpacity')}: {theme.hero_opacity ?? 100}%
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={theme.hero_opacity ?? 100}
+              onChange={(e) => setTheme({ hero_opacity: Number(e.target.value) })}
+            />
+            <p className="field-help">{t('heroOpacityHelp')}</p>
+          </div>
+        )}
+        <StyleSelects
+          t={t}
+          style={{ size: theme.title_size, font: theme.title_font }}
+          onChange={(s) => setTheme({ title_size: s.size, title_font: s.font })}
+        />
+        <div className={styles.colorField}>
+          <span className="field-label">{t('titleAlign')}</span>
+          <NativeSelect
+            value={theme.title_align ?? 'left'}
+            onChange={(e) => setTheme({ title_align: e.target.value })}
+          >
+            <option value="left">{t('alignLeft')}</option>
+            <option value="center">{t('alignCenter')}</option>
+            <option value="right">{t('alignRight')}</option>
+          </NativeSelect>
+        </div>
 
         <h4 className={styles.panelSubhead}>{t('dateLocationChip')}</h4>
         <CheckboxRow
