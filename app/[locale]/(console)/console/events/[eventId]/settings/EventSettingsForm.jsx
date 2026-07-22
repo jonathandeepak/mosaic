@@ -442,6 +442,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
           </Button>
         </div>
       </Dialog>
-    </div>
+    </form>
   )
 }
+
