@@ -548,7 +548,8 @@
     "placementTop": "Вверху шапки",
     "placementBottom": "Внизу шапки",
     "groupEventDetails": "Детали события",
-    "groupHero": "Шапка"
+    "groupHero": "Шапка",
+    "autoTranslateTo": "Перевести на"
   },
   "questionTypes": {
     "text": "Короткий текст",

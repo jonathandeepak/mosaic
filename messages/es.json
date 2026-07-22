@@ -548,7 +548,8 @@
     "placementTop": "Arriba del encabezado",
     "placementBottom": "Abajo del encabezado",
     "groupEventDetails": "Detalles del evento",
-    "groupHero": "Encabezado"
+    "groupHero": "Encabezado",
+    "autoTranslateTo": "Traducir al"
   },
   "questionTypes": {
     "text": "Texto corto",
