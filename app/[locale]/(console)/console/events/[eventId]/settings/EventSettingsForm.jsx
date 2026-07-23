@@ -13,6 +13,7 @@ import {
   Dialog,
   Field,
   Input,
+  PreferenceDateInput,
   Textarea,
   NativeSelect,
   Tabs,
@@ -210,22 +211,22 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
           </Field>
           <Field label={t('startsAt')}>
             {({ id }) => (
-              <Input id={id} type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+              <PreferenceDateInput id={id} type="datetime-local" value={startsAt} onChange={setStartsAt} />
             )}
           </Field>
           <Field label={t('endsAt')}>
             {({ id }) => (
-              <Input id={id} type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
+              <PreferenceDateInput id={id} type="datetime-local" value={endsAt} onChange={setEndsAt} />
             )}
           </Field>
           <Field label={t('regOpens')}>
             {({ id }) => (
-              <Input id={id} type="datetime-local" value={regOpens} onChange={(e) => setRegOpens(e.target.value)} />
+              <PreferenceDateInput id={id} type="datetime-local" value={regOpens} onChange={setRegOpens} />
             )}
           </Field>
           <Field label={t('regCloses')}>
             {({ id }) => (
-              <Input id={id} type="datetime-local" value={regCloses} onChange={(e) => setRegCloses(e.target.value)} />
+              <PreferenceDateInput id={id} type="datetime-local" value={regCloses} onChange={setRegCloses} />
             )}
           </Field>
           <Field label={t('capacity')} help={t('capacityHelp')}>
