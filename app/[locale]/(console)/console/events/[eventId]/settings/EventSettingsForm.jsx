@@ -15,12 +15,7 @@ import {
   Field,
   Input,
   PreferenceDateInput,
-  Textarea,
   NativeSelect,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
 } from '@/components/ui'
 import styles from './settings.module.css'
 
@@ -31,16 +26,12 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   const router = useRouter()
   const supabase = getSupabaseBrowserClient()
 
-  const [name, setName] = useState(event.name ?? {})
-  const [description, setDescription] = useState(event.description ?? {})
-  const [location, setLocation] = useState(event.location ?? {})
   // Built-in languages this event offers. Custom (organizer-defined) languages
   // are managed on the Event Page tab; this checklist covers the platform set.
   const [supportedLocales, setSupportedLocales] = useState(
     eventLocales(event).filter((l) => LOCALES.includes(l))
   )
   const [defaultLocale, setDefaultLocale] = useState(event.default_locale ?? 'en')
-  const [contentTab, setContentTab] = useState(event.default_locale ?? 'en')
   const [slug, setSlug] = useState(event.slug)
   const [timezone, setTimezone] = useState(event.timezone)
   const [startsAt, setStartsAt] = useState(toLocalInput(event.starts_at, event.timezone))
@@ -64,7 +55,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   // caught up to yet.
   function snapshot(slugValue = slug) {
     return JSON.stringify([
-      name, description, location, slugValue, timezone,
+      slugValue, timezone,
       startsAt, endsAt, regOpens, regCloses, capacity, visibility, contact,
       supportedLocales, defaultLocale,
     ])
@@ -122,9 +113,6 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
     const { error } = await supabase
       .from('events')
       .update({
-        name,
-        description,
-        location,
         slug: slugValue,
         timezone,
         starts_at: fromLocalInput(startsAt, timezone),
@@ -226,55 +214,6 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
             </NativeSelect>
           )}
         </Field>
-      </section>
-
-      <section className="card card-pad">
-        {/* Localized content, one tab per supported locale */}
-        <Tabs
-          value={supportedLocales.includes(contentTab) ? contentTab : defaultLocale}
-          onValueChange={setContentTab}
-        >
-          <TabsList>
-            {supportedLocales.map((l) => (
-              <TabsTrigger key={l} value={l}>
-                {LOCALE_NAMES[l]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {supportedLocales.map((l) => (
-            <TabsContent key={l} value={l}>
-              <div className={styles.grid} style={{ marginTop: 'var(--s-4)' }}>
-                <Field label={`${t('eventName')} (${l})`} required={l === defaultLocale}>
-                  {({ id }) => (
-                    <Input
-                      id={id}
-                      value={name[l] ?? ''}
-                      onChange={(e) => setName({ ...name, [l]: e.target.value })}
-                    />
-                  )}
-                </Field>
-                <Field label={`${t('description')} (${l})`}>
-                  {({ id }) => (
-                    <Textarea
-                      id={id}
-                      value={description[l] ?? ''}
-                      onChange={(e) => setDescription({ ...description, [l]: e.target.value })}
-                    />
-                  )}
-                </Field>
-                <Field label={`${t('location')} (${l})`}>
-                  {({ id }) => (
-                    <Input
-                      id={id}
-                      value={location[l] ?? ''}
-                      onChange={(e) => setLocation({ ...location, [l]: e.target.value })}
-                    />
-                  )}
-                </Field>
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
       </section>
 
       <section className="card card-pad">
