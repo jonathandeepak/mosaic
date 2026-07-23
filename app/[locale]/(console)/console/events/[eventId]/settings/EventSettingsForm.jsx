@@ -34,7 +34,11 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   const [name, setName] = useState(event.name ?? {})
   const [description, setDescription] = useState(event.description ?? {})
   const [location, setLocation] = useState(event.location ?? {})
-  const [supportedLocales, setSupportedLocales] = useState(eventLocales(event))
+  // Built-in languages this event offers. Custom (organizer-defined) languages
+  // are managed on the Event Page tab; this checklist covers the platform set.
+  const [supportedLocales, setSupportedLocales] = useState(
+    eventLocales(event).filter((l) => LOCALES.includes(l))
+  )
   const [defaultLocale, setDefaultLocale] = useState(event.default_locale ?? 'en')
   const [contentTab, setContentTab] = useState(event.default_locale ?? 'en')
   const [slug, setSlug] = useState(event.slug)
@@ -103,6 +107,18 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   async function save(slugValue = slug) {
     setSlugWarnOpen(false)
     setSaveState('saving')
+    // Language selection lives in page_content.i18n.available (shared with the
+    // Event Page editor). Preserve organizer-defined custom languages that are
+    // enabled there, and keep the legacy column + default locale in sync.
+    const existingContent = event.page_content ?? {}
+    const existingI18n = existingContent.i18n ?? {}
+    const customCodes = Array.isArray(existingI18n.custom)
+      ? existingI18n.custom.map((c) => c.code)
+      : []
+    const keptCustoms = (Array.isArray(existingI18n.available) ? existingI18n.available : [])
+      .filter((c) => customCodes.includes(c))
+    const nextAvailable = [...supportedLocales, ...keptCustoms]
+
     const { error } = await supabase
       .from('events')
       .update({
@@ -120,6 +136,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
         contact,
         default_locale: defaultLocale,
         supported_locales: supportedLocales,
+        page_content: { ...existingContent, i18n: { ...existingI18n, available: nextAvailable } },
       })
       .eq('id', event.id)
     if (error) {

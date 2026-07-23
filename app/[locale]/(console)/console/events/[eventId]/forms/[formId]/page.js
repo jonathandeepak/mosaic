@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { FormBuilder } from '@/components/form-builder/FormBuilder'
-import { eventLocales } from '@/lib/i18n/locales'
+import { eventLocales, LOCALES } from '@/lib/i18n/locales'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +25,7 @@ export default async function FormBuilderPage({ params }) {
       .select('key, name')
       .eq('event_id', eventId)
       .order('sort_order'),
-    supabase.from('events').select('default_locale, supported_locales').eq('id', eventId).single(),
+    supabase.from('events').select('default_locale, supported_locales, page_content').eq('id', eventId).single(),
   ])
   if (!version) notFound()
 
@@ -36,7 +36,7 @@ export default async function FormBuilderPage({ params }) {
       initialDefinition={version.definition ?? { questions: [] }}
       participantTypes={types ?? []}
       defaultLocale={event?.default_locale ?? 'en'}
-      supportedLocales={eventLocales(event)}
+      supportedLocales={eventLocales(event).filter((l) => LOCALES.includes(l))}
     />
   )
 }

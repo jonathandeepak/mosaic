@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link, redirect } from '@/lib/i18n/navigation'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
-import { lt, eventLocales } from '@/lib/i18n/locales'
+import { lt, eventLocales, LOCALES } from '@/lib/i18n/locales'
 import { LocaleSwitcher } from '@/components/shell/LocaleSwitcher'
 import { RegistrationWizard } from '@/components/wizard/RegistrationWizard'
 
@@ -129,7 +129,9 @@ export default async function RegisterPage({ params }) {
         : null,
     }))
 
-  const localeOptions = eventLocales(event)
+  // The registration form is built-in locales only; custom languages are
+  // event-landing-page content and can't be routed to here.
+  const localeOptions = eventLocales(event).filter((l) => LOCALES.includes(l))
 
   return (
     <div className="container-narrow" style={{ paddingBlock: 'var(--s-6)' }}>
