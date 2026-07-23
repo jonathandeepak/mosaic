@@ -806,20 +806,6 @@ export function EventPageEditor({ initialEvent }) {
     const theme = content.theme ?? {}
     const setTheme = (patch) => patchContent('theme', patch)
     const logo = content.logo ?? {}
-    // availableLocales is computed at component scope. Toggling always keeps
-    // the default language and stays in LOCALES order.
-    const toggleLocale = (l) => {
-      if (l === event.default_locale) return // default can't be removed
-      const set = new Set(availableLocales)
-      if (set.has(l)) set.delete(l)
-      else set.add(l)
-      set.add(event.default_locale)
-      // Keep built-ins in LOCALES order, then preserve any custom codes so
-      // toggling a built-in never drops organizer-defined languages.
-      const builtins = LOCALES.filter((x) => set.has(x))
-      const customs = customCodes.filter((x) => set.has(x))
-      patchContent('i18n', { available: [...builtins, ...customs] })
-    }
     // Contrast check on the effective page text vs background.
     const bg = theme.page_bg || (isDark ? '#14161b' : '#ffffff')
     const fg = theme.text_color || (isDark ? '#eceae4' : '#111111')
@@ -1075,15 +1061,9 @@ export function EventPageEditor({ initialEvent }) {
             ))}
           </NativeSelect>
         </div>
+        {/* The five built-in languages are enabled/disabled in event Settings;
+            here organizers only manage their own custom languages. */}
         <span className="field-label">{t('availableLanguages')}</span>
-        {LOCALES.map((l) => (
-          <CheckboxRow
-            key={l}
-            label={LOCALE_NAMES[l]}
-            checked={availableLocales.includes(l)}
-            onCheckedChange={() => toggleLocale(l)}
-          />
-        ))}
         {customLangs.map((c) => (
           <div key={c.code} className={styles.customLangRow}>
             <span>{c.name}</span>
