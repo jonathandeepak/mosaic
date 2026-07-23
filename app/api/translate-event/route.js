@@ -1,52 +1,45 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 
-const LANGUAGE_NAMES = {
-  en: 'English',
-  es: 'Spanish',
-  fr: 'French',
-  ru: 'Russian',
-  uk: 'Ukrainian',
+const SUPPORTED = new Set(['en', 'es', 'fr', 'ru', 'uk'])
+
+// Google Cloud Translation v2 HTML-escapes some characters even in text mode.
+function unescapeHtml(s) {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
 }
 
-// Translate a batch of short event-content strings from one language to
-// another using Claude. Returns the translations in the same order.
-async function translateBatch(strings, sourceLang, targetLang, apiKey) {
-  const system =
-    `You are a professional translator for an event website. Translate each string ` +
-    `in the given JSON array from ${sourceLang} to ${targetLang}. Preserve meaning, ` +
-    `tone, line breaks, punctuation, emoji and any placeholders like {date}. Do not ` +
-    `translate proper names, brand names, URLs or email addresses. Return ONLY a JSON ` +
-    `array of translated strings, same length and order, no commentary.`
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
-      system,
-      messages: [{ role: 'user', content: JSON.stringify(strings) }],
-    }),
-  })
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(`Anthropic API error ${res.status}: ${detail.slice(0, 200)}`)
+// Translate a batch of strings via Google Cloud Translation (v2, API key).
+// Google accepts up to 128 text segments per request, so chunk to be safe.
+async function translateBatch(strings, source, target, apiKey) {
+  const out = []
+  for (let i = 0; i < strings.length; i += 100) {
+    const chunk = strings.slice(i, i + 100)
+    const res = await fetch(
+      `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ q: chunk, source, target, format: 'text' }),
+      }
+    )
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '')
+      throw new Error(`Google Translate error ${res.status}: ${detail.slice(0, 200)}`)
+    }
+    const data = await res.json()
+    const items = data?.data?.translations
+    if (!Array.isArray(items) || items.length !== chunk.length) {
+      throw new Error('Unexpected translation response shape')
+    }
+    for (const it of items) out.push(unescapeHtml(it.translatedText ?? ''))
   }
-
-  const data = await res.json()
-  const text = data?.content?.[0]?.text ?? ''
-  const match = text.match(/\[[\s\S]*\]/)
-  const arr = JSON.parse(match ? match[0] : text)
-  if (!Array.isArray(arr) || arr.length !== strings.length) {
-    throw new Error('Unexpected translation response shape')
-  }
-  return arr.map((s) => (typeof s === 'string' ? s : String(s)))
+  return out
 }
 
 export async function POST(request) {
@@ -59,7 +52,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
   if (!apiKey) {
     return NextResponse.json({ error: 'no_api_key' }, { status: 400 })
   }
@@ -76,7 +69,7 @@ export async function POST(request) {
     !Array.isArray(strings) ||
     typeof source !== 'string' ||
     !Array.isArray(targets) ||
-    !LANGUAGE_NAMES[source]
+    !SUPPORTED.has(source)
   ) {
     return NextResponse.json({ error: 'bad_request' }, { status: 400 })
   }
@@ -90,16 +83,14 @@ export async function POST(request) {
   const translations = {}
   try {
     for (const target of targets) {
-      if (!LANGUAGE_NAMES[target] || target === source) continue
-      translations[target] = await translateBatch(
-        strings,
-        LANGUAGE_NAMES[source],
-        LANGUAGE_NAMES[target],
-        apiKey
-      )
+      if (!SUPPORTED.has(target) || target === source) continue
+      translations[target] = await translateBatch(strings, source, target, apiKey)
     }
   } catch (e) {
-    return NextResponse.json({ error: 'translation_failed', detail: String(e.message) }, { status: 502 })
+    return NextResponse.json(
+      { error: 'translation_failed', detail: String(e.message) },
+      { status: 502 }
+    )
   }
 
   return NextResponse.json({ translations })

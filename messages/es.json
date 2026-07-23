@@ -554,7 +554,7 @@
     "translateAllHelp": "Rellena los idiomas vacíos traduciendo tu texto del idioma predeterminado con IA. El texto existente se conserva. Revisa y guarda.",
     "translateDone": "Traducido. Revisa los otros idiomas y guarda la página.",
     "translateError": "Error al traducir. Inténtalo de nuevo.",
-    "translateNoKey": "La traducción automática aún no está configurada (falta la clave API). Pide al administrador que añada ANTHROPIC_API_KEY.",
+    "translateNoKey": "La traducción automática aún no está configurada (falta la clave API). Pide al administrador que añada GOOGLE_TRANSLATE_API_KEY.",
     "translateNoTargets": "Activa al menos otro idioma primero.",
     "translateNothing": "Nada que traducir todavía — añade texto primero."
   },
