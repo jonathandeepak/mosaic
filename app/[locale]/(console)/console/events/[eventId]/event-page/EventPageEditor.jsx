@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from '@/lib/i18n/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
-import { LOCALES, LOCALE_NAMES } from '@/lib/i18n/locales'
+import { LOCALES, LOCALE_NAMES, eventLocales } from '@/lib/i18n/locales'
 import { eventMediaUrl } from '@/lib/storage'
 import { Button, CheckboxRow, Field, Input, NativeSelect, Textarea } from '@/components/ui'
 import {
@@ -371,22 +371,12 @@ export function EventPageEditor({ initialEvent }) {
   const localeName = (code) =>
     LOCALE_NAMES[code] || customLangs.find((c) => c.code === code)?.name || code
 
-  // Languages this event is offered in. Always includes the default language;
-  // otherwise from the explicit list (i18n.available) or the locales that have
-  // an event name filled in. Built-ins kept in LOCALES order, customs appended.
-  const availableLocales = (() => {
-    const explicit = content.i18n?.available
-    const base =
-      Array.isArray(explicit) && explicit.length
-        ? explicit
-        : LOCALES.filter((l) => (event.name?.[l] ?? '').trim() !== '')
-    const valid = new Set([...LOCALES, ...customCodes])
-    const set = new Set(base.filter((l) => valid.has(l)))
-    set.add(event.default_locale)
-    const builtins = LOCALES.filter((l) => set.has(l))
-    const customs = customCodes.filter((c) => set.has(c))
-    return [...builtins, ...customs]
-  })()
+  // Languages this event is offered in. Shared with the public page and the
+  // rest of the console via eventLocales() so every surface agrees. It honors
+  // the legacy supported_locales column, which the old hand-rolled version
+  // here ignored — hiding the language switcher until a name had been typed in
+  // each language, i.e. exactly when the organizer needs it to add that text.
+  const availableLocales = eventLocales(event)
 
   // If the previewed language is no longer available (e.g. just unchecked),
   // fall back to the default language.
