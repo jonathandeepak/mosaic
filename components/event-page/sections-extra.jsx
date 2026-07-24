@@ -163,7 +163,7 @@ export function TestimonialsSection({ content = {}, locale, defaultLocale, edita
         ) : (
           <div className={styles.quoteGrid}>
             {items.map((it) => (
-              <figure key={it.id} className={styles.quoteCard}>
+              <figure key={it.id} className={styles.quoteCard} style={content.card_bg ? { background: content.card_bg } : undefined}>
                 <blockquote className={styles.quoteText}>{L(it.quote)}</blockquote>
                 <figcaption className={styles.quoteMeta}>
                   {it.author && <strong>{it.author}</strong>}

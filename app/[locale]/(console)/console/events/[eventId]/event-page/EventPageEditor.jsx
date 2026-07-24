@@ -1974,6 +1974,16 @@ export function EventPageEditor({ initialEvent }) {
         <p className="field-help">{t('testimonialHeadingHelp')}</p>
         {headingEditor('testimonials')}
         {sectionBgField('testimonials')}
+        {(testimonials.layout ?? 'cards') !== 'quote' && (
+          <ColorField
+            label={t('cardBg')}
+            addLabel={t('addColor')}
+            resetLabel={t('resetColor')}
+            value={testimonials.card_bg}
+            defaultValue={isDark ? '#14161b' : '#f9f9f9'}
+            onChange={(color) => patchContent('testimonials', { card_bg: color ?? undefined })}
+          />
+        )}
         {items.map((it) => (
           <div key={it.id} className={styles.panelItem}>
             <div className={styles.panelItemFields}>

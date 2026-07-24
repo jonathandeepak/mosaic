@@ -477,6 +477,7 @@
     "alignDefault": "Default Alignment",
     "testimonialLayout": "Layout",
     "testimonialLayoutCards": "Cards",
+    "cardBg": "Card Background Color",
     "testimonialLayoutQuote": "Minimal Quote (centered)",
     "testimonialHeadingHelp": "The heading is optional — leave it empty to show only the quotes.",
     "chipStyle": "Chip Style",

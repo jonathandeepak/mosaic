@@ -477,6 +477,7 @@
     "alignDefault": "Alineación por defecto",
     "testimonialLayout": "Diseño",
     "testimonialLayoutCards": "Tarjetas",
+    "cardBg": "Color de fondo de la tarjeta",
     "testimonialLayoutQuote": "Cita minimalista (centrada)",
     "testimonialHeadingHelp": "El título es opcional: déjalo vacío para mostrar solo las citas.",
     "chipStyle": "Estilo de la etiqueta",

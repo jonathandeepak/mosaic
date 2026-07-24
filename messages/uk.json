@@ -477,6 +477,7 @@
     "alignDefault": "Вирівнювання за замовчуванням",
     "testimonialLayout": "Макет",
     "testimonialLayoutCards": "Картки",
+    "cardBg": "Колір фону картки",
     "testimonialLayoutQuote": "Мінімалістична цитата (по центру)",
     "testimonialHeadingHelp": "Заголовок необов'язковий — залиште порожнім, щоб показувати лише цитати.",
     "chipStyle": "Стиль плашки",

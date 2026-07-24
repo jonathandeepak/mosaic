@@ -477,6 +477,7 @@
     "alignDefault": "Alignement par défaut",
     "testimonialLayout": "Disposition",
     "testimonialLayoutCards": "Cartes",
+    "cardBg": "Couleur de fond de la carte",
     "testimonialLayoutQuote": "Citation minimaliste (centrée)",
     "testimonialHeadingHelp": "Le titre est facultatif — laissez-le vide pour n'afficher que les citations.",
     "chipStyle": "Style de l'étiquette",
