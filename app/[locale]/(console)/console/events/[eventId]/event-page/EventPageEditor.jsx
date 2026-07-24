@@ -454,6 +454,7 @@ export function EventPageEditor({ initialEvent }) {
       markDirty()
       setTranslateState('done')
       setTranslateMsg(t('translateDone'))
+      window.alert(t('translateFinished'))
     } catch {
       setTranslateState('error')
       setTranslateMsg(t('translateError'))
