@@ -106,11 +106,15 @@ function Section({ id, section, className, style, dataFlat, dataHasBg, editable,
   )
 }
 
-function SectionHeading({ text, headingStyle, centered }) {
+function SectionHeading({ text, headingStyle, centered, defaultAlign }) {
+  const align = headingStyle?.align || defaultAlign || (centered ? 'center' : undefined)
   return (
     <h2
-      className={`${styles.sectionTitle} ${centered ? styles.centered : ''}`}
-      style={textStyle(headingStyle)}
+      className={styles.sectionTitle}
+      style={{
+        ...textStyle(headingStyle),
+        ...(align ? { textAlign: align } : {}),
+      }}
     >
       {text}
     </h2>
@@ -262,6 +266,7 @@ export function EventPageView({
       text={L(sectionData.heading) || fallback}
       headingStyle={sectionData.heading_style}
       centered={centered}
+      defaultAlign={theme.title_align}
     />
   )
   const registerButton = (
