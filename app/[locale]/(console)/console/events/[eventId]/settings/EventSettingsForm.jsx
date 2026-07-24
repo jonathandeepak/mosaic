@@ -46,6 +46,7 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   const [saveState, setSaveState] = useState('idle')
   const [publishBurst, setPublishBurst] = useState(null)
   const [slugWarnOpen, setSlugWarnOpen] = useState(false)
+  const [publishError, setPublishError] = useState(null)
 
   const timezones = Intl.supportedValuesOf?.('timeZone') ?? ['UTC']
 
@@ -143,8 +144,24 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
   }
 
   async function setStatus(status) {
+    // A published event with no published form leaves registrants on a
+    // dead-end wizard (pick single/group, then no options). Require the
+    // creator to have published a form THEMSELVES — the default form
+    // auto-published at creation is only a fallback and doesn't count.
+    if (status === 'published') {
+      const { count } = await supabase
+        .from('forms')
+        .select('id', { count: 'exact', head: true })
+        .eq('event_id', event.id)
+        .eq('creator_published', true)
+      if (!count) {
+        setPublishError(t('publishNeedsForm'))
+        return
+      }
+    }
     const { error } = await supabase.from('events').update({ status }).eq('id', event.id)
     if (!error) {
+      setPublishError(null)
       if (status === 'published') setPublishBurst(Date.now())
       router.refresh()
     }
@@ -399,11 +416,13 @@ export function EventSettingsForm({ event, initialTypes, forms }) {
 
       <div className={styles.footer}>
         <div className={styles.footerStatus} aria-live="polite">
-          {publishBurst && (
+          {publishError ? (
+            <span style={{ color: 'var(--danger)' }}>{publishError}</span>
+          ) : publishBurst ? (
             <strong className="publish-flash" style={{ color: 'var(--success)' }}>
               {t('eventPublished')}
             </strong>
-          )}
+          ) : null}
         </div>
         <div className={styles.footerActions}>
           {/* Save status sits right next to the Save button so it's noticed. */}
