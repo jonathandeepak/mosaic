@@ -70,6 +70,49 @@ export function FormBuilder({
     }
   }, [supportedLocales, defaultLocale, editLocale])
 
+  useEffect(() => {
+    if (!initialized.current) return
+    if (editLocale === defaultLocale) return
+    if (supportedLocales && !supportedLocales.includes(editLocale)) return
+
+    let cancelled = false
+
+    async function translateSelectedLocale() {
+      try {
+        const res = await fetch('/api/translate-form', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            definition,
+            source: defaultLocale,
+            targets: [editLocale],
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || cancelled) return
+
+        const nextDefinition = data?.translatedDefinition
+        if (!nextDefinition) return
+        const latestDefinition = useBuilderStore.getState().definition
+        if (JSON.stringify(latestDefinition) !== JSON.stringify(definition)) {
+          return
+        }
+        if (JSON.stringify(nextDefinition) !== JSON.stringify(latestDefinition)) {
+          store.replaceDefinition(nextDefinition)
+        }
+      } catch {
+        // Translation is best-effort; editing must keep working even if the
+        // API key is missing or the request fails.
+      }
+    }
+
+    translateSelectedLocale()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editLocale, defaultLocale, supportedLocales])
+
   // Debounced autosave of the draft version.
   useEffect(() => {
     if (!dirty) return
