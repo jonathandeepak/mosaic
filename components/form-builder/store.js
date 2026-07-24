@@ -80,6 +80,12 @@ export const useBuilderStore = create((set, get) => ({
     get()._commit({ ...def, questions })
   },
 
+  // Replace the whole definition in one commit (undoable). Used by
+  // auto-translate, which fills many localized slots at once.
+  replaceDefinition(nextDefinition) {
+    get()._commit(nextDefinition)
+  },
+
   select(id) {
     set({ selectedId: id })
   },
