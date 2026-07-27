@@ -20,7 +20,7 @@ export default async function RegisterPage({ params, searchParams }) {
   } = await supabase.auth.getUser()
   if (!user) {
     redirect({
-      href: `/login?next=${encodeURIComponent(`/${locale}/events/${slug}/register`)}`,
+      href: { pathname: '/login', query: { next: `/${locale}/events/${slug}/register` } },
       locale,
     })
   }
